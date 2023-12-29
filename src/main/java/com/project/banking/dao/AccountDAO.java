@@ -6,6 +6,7 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import com.project.banking.models.*;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -29,6 +30,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *  с таблицей account.
  */
 
+@Component
 public class AccountDAO {
 	private static final String DRIVER;
 	private static final String URL;
