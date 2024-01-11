@@ -2,11 +2,11 @@ package com.project.banking.controllers;
 
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.models.Transaction;
-import com.project.banking.models.TypeOfTransaction;
+import com.project.banking.models.TransactionIncoming;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
-import java.util.Date;
 import java.util.logging.Logger;
 
 @RestController
@@ -26,13 +26,19 @@ public class TransactionAPI {
 //		return "Hello world";
 //	}
 
-	@PostMapping("/pay")
-	public Transaction makeTransaction(@RequestBody Transaction transaction) {
-		Logger.getGlobal().info(transaction.toString());
-		transaction.setTime(new Date());
-		transaction.setTypeOfTransaction(TypeOfTransaction.TRANSFER);
-		transaction.setSendingBank(1);
-		accountDAO.transfer(transaction);
-		return transaction;
+	@PostMapping(value = "/pay")
+	public ModelAndView makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {
+		Logger.getGlobal().info(transactionIncoming.toString());
+		Transaction transaction = new Transaction(transactionIncoming);
+//		input.setTime(new Date());
+//		input.setTypeOfTransaction(TypeOfTransaction.TRANSFER);
+//		input.setSendingBank(1);		//по идее, банк устанавливает банкинг по номеру счёта
+		ModelAndView modelAndView = new ModelAndView();
+		modelAndView.addObject("transaction", transaction);
+		modelAndView.setViewName("confirm");
+//		RestClient restClient = RestClient.create("http://localhost:8080");
+//		String result = restClient.post().contentType(MediaType.TEXT_HTML).body(modelAndView).retrieve().body(String.class);
+//		Logger.getGlobal().info(result);
+		return modelAndView;
 	}
 }

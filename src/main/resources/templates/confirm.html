@@ -5,9 +5,15 @@
     <title>Confirm</title>
 </head>
 <body>
-    <form>
+    <div th:text="${'Transaction number ' + transaction.getId()}"></div>
+    <div th:text="${'Transaction creation time: ' + transaction.getTime()}"></div>
+    <div th:text="${'Type of transaction: ' + transaction.getTypeOfTransaction()}"></div>
+    <div th:text="${'Receiving account: ' + transaction.getReceivingAccount()}"></div>
+    <div th:text="${'Amount: ' + transaction.getAmount() + ' ' + transaction.getCurrency()}"></div>
+    <form th:method="POST" action="http://localhost:7070/api/transaction">
         <label for="sms-code">Please, enter a code from SMS, sent on your phone.</label>
         <input id="sms-code" type="text"/>
+        <input type="hidden" th:field="*{transaction.id}"/>
         <input type="submit" value="Send"/>
     </form>
 </body>

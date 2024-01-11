@@ -64,4 +64,14 @@ public class Transaction {
 		this.amount = amount;
 		this.currency = currency;
 	}
+
+	public Transaction(TransactionIncoming transactionIncoming) {
+		time = new Date();
+		typeOfTransaction = TypeOfTransaction.TRANSFER;
+		receivingBank = transactionIncoming.getReceivingBank();
+		receivingAccount = transactionIncoming.getReceivingAccount();
+		sendingAccount = transactionIncoming.getSendingAccount();
+		amount = transactionIncoming.getAmount();
+		currency = transactionIncoming.getCurrency();
+	}
 }

@@ -27,12 +27,12 @@ public class UserDAO {
 	static {
 		try {
 			properties = new Properties();
-			FileReader reader = new FileReader("src/main/resources/configuration.yml");
+			FileReader reader = new FileReader("src/main/resources/application.properties");
 			properties.load(reader);
-			DRIVER = properties.getProperty("driver");
-			URL = properties.getProperty("url");
-			USERNAME = properties.getProperty("username");
-			PASSWORD = properties.getProperty("password");
+			DRIVER = properties.getProperty("spring.datasource.driver-class-name");
+			URL = properties.getProperty("spring.datasource.url");
+			USERNAME = properties.getProperty("spring.datasource.username");
+			PASSWORD = properties.getProperty("spring.datasource.password");
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
