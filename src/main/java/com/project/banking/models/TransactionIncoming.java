@@ -13,7 +13,7 @@ import lombok.*;
 @ToString
 public class TransactionIncoming {
 
-	private int invoice_id;
+	private int invoiceId;
 
 	/** поле банк-получатель */
 	private int receivingBank;

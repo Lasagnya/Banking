@@ -1,7 +1,7 @@
 package com.project.banking.dao;
 
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TypeOfTransaction;
+import com.project.banking.models.*;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -12,8 +12,10 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 import java.util.Properties;
 
+@Component
 public class TransactionDAO {
 	private static final String DRIVER;
 	private static final String URL;
@@ -48,14 +50,40 @@ public class TransactionDAO {
 		}
 	}
 
+	public Optional<Transaction> findById(int id) {
+		Transaction transaction = new Transaction();
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement("select * from transaction where transaction_id=?");
+			preparedStatement.setInt(1, id);
+			ResultSet rs = preparedStatement.executeQuery();
+			if (rs.next()) {
+				transaction.setId(rs.getInt("transaction_id"));
+				transaction.setTime(rs.getTimestamp("execution_time"));
+				transaction.setTypeOfTransaction(TypeOfTransaction.valueOf(rs.getString("type_of_transaction")));
+				transaction.setSendingBank(rs.getInt("sending_bank"));
+				transaction.setReceivingBank(rs.getInt("receiving_bank"));
+				transaction.setSendingAccount(rs.getInt("sending_account"));
+				transaction.setReceivingAccount(rs.getInt("receiving_account"));
+				transaction.setAmount(rs.getDouble("amount"));
+				transaction.setCurrency(Currency.valueOf(rs.getString("transaction_currency")));
+				transaction.setStatus(TransactionStatus.valueOf(rs.getString("transaction_status")));
+				return Optional.of(transaction);
+			}
+			else return Optional.empty();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	/**
 	 * Сохранение транзакции в базу данных
 	 * @param transaction транзакция для сохранения
 	 */
-	public void saveTransaction(Transaction transaction) {
+	public Transaction saveTransaction(Transaction transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
-					"insert into transaction(execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency) values(?, ?, ?, ?, ?, ?, ?, ?)");
+					"insert into transaction(execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, transaction_status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					Statement.RETURN_GENERATED_KEYS);
 			preparedStatement1.setTimestamp(1, new Timestamp(transaction.getTime().getTime()));
 			preparedStatement1.setString(2, transaction.getTypeOfTransaction().toString());
 			preparedStatement1.setInt(3, transaction.getSendingBank());
@@ -64,12 +92,26 @@ public class TransactionDAO {
 			preparedStatement1.setInt(6, transaction.getReceivingAccount());
 			preparedStatement1.setDouble(7, transaction.getAmount());
 			preparedStatement1.setString(8, transaction.getCurrency().toString());
+			preparedStatement1.setString(9, transaction.getStatus().toString());
 			preparedStatement1.executeUpdate();
+			ResultSet generatedKeys = preparedStatement1.getGeneratedKeys();
+			if (generatedKeys.next()) {
+				transaction.setId(generatedKeys.getInt(1));
+			}
+			else {
+				throw new SQLException("Creating transaction failed, no ID obtained.");
+			}
 			makeCheck(transaction);
 		} catch (SQLException e) {
 			if (!e.getSQLState().equals("23505"))
 				throw new RuntimeException(e);
 		}
+		return transaction;
+	}
+
+	public Transaction fillAndSave(TransactionIncoming transactionIncoming) {
+		Transaction transaction = new Transaction(transactionIncoming);
+		return saveTransaction(transaction);
 	}
 
 	/**

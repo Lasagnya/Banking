@@ -1,9 +1,13 @@
 package com.project.banking.controllers;
 
 import com.project.banking.dao.AccountDAO;
+import com.project.banking.dao.TransactionCallbackDAO;
+import com.project.banking.dao.TransactionDAO;
 import com.project.banking.models.Transaction;
+import com.project.banking.models.TransactionCallback;
 import com.project.banking.models.TransactionIncoming;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -13,11 +17,13 @@ import java.util.logging.Logger;
 @RequestMapping("/api/transaction")
 public class TransactionAPI {
 
-	private final AccountDAO accountDAO;
+	private final TransactionDAO transactionDAO;
+	private final TransactionCallbackDAO transactionCallbackDAO;
 
 	@Autowired
-	public TransactionAPI(AccountDAO accountDAO) {
-		this.accountDAO = accountDAO;
+	public TransactionAPI(TransactionDAO transactionDAO, TransactionCallbackDAO transactionCallbackDAO) {
+		this.transactionDAO = transactionDAO;
+		this.transactionCallbackDAO = transactionCallbackDAO;
 	}
 
 //	@GetMapping(produces = "application/json")
@@ -26,19 +32,14 @@ public class TransactionAPI {
 //		return "Hello world";
 //	}
 
-	@PostMapping(value = "/pay")
+	@PostMapping(value = "/pay", produces = MediaType.TEXT_HTML_VALUE)
 	public ModelAndView makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {
 		Logger.getGlobal().info(transactionIncoming.toString());
-		Transaction transaction = new Transaction(transactionIncoming);
-//		input.setTime(new Date());
-//		input.setTypeOfTransaction(TypeOfTransaction.TRANSFER);
-//		input.setSendingBank(1);		//по идее, банк устанавливает банкинг по номеру счёта
+		Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);
+		transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);
 		ModelAndView modelAndView = new ModelAndView();
 		modelAndView.addObject("transaction", transaction);
 		modelAndView.setViewName("confirm");
-//		RestClient restClient = RestClient.create("http://localhost:8080");
-//		String result = restClient.post().contentType(MediaType.TEXT_HTML).body(modelAndView).retrieve().body(String.class);
-//		Logger.getGlobal().info(result);
 		return modelAndView;
 	}
 }

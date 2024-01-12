@@ -43,6 +43,8 @@ public class Transaction {
 	/** поле валюта транзации */
 	private Currency currency;
 
+	private TransactionStatus status;
+
 	/**
 	 *
 	 * @param time время выполнения
@@ -70,8 +72,10 @@ public class Transaction {
 		typeOfTransaction = TypeOfTransaction.TRANSFER;
 		receivingBank = transactionIncoming.getReceivingBank();
 		receivingAccount = transactionIncoming.getReceivingAccount();
+		sendingBank = 1;									//по идее, банк устанавливает банкинг по номеру счёта
 		sendingAccount = transactionIncoming.getSendingAccount();
 		amount = transactionIncoming.getAmount();
 		currency = transactionIncoming.getCurrency();
+		status = TransactionStatus.PENDING;
 	}
 }

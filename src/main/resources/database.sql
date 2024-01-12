@@ -30,6 +30,20 @@ create table transaction(
                             sending_account integer references account(account_id),
                             receiving_account integer references account(account_id),
                             amount numeric(15, 2),
-                            transaction_currency char(3) not null
+                            transaction_currency char(3) not null,
+                            transaction_status varchar(9) default 'NEW'
 );
 alter table transaction add constraint transaction_unique unique (execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount);
+
+create table transaction_callback (
+    id integer references transaction(transaction_id) unique,
+    invoice_id integer,
+    status varchar(9),
+    sending_bank integer,
+    receiving_bank integer,
+    sending_account integer,
+    receiving_account integer,
+    amount numeric(15, 2),
+    transaction_currency char(3) not null,
+    callback_uri varchar(2048) not null
+);
