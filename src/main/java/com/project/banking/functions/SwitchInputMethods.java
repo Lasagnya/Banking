@@ -22,7 +22,7 @@ import java.util.Scanner;
 public class SwitchInputMethods {
 	private static final AccountDAO accountDAO = new AccountDAO();
 	private static final BankDAO bankDAO = new BankDAO();
-	Scanner scanner = new Scanner(System.in);
+	private final Scanner scanner = new Scanner(System.in);
 
 	/**
 	 * Получение банка-получателя

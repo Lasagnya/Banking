@@ -73,7 +73,7 @@ public class TransactionCallbackDAO {
 			preparedStatement.setInt(1, id);
 			ResultSet rs = preparedStatement.executeQuery();
 			if (rs.next()) {
-				transaction.setId(rs.getInt("transaction_id"));
+				transaction.setId(rs.getInt("id"));
 				transaction.setInvoiceId(rs.getInt("invoice_id"));
 				transaction.setCallbackUri(rs.getString("callback_uri"));
 				transaction.setTime(rs.getTimestamp("execution_time"));

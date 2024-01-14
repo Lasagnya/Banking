@@ -23,7 +23,7 @@ public class IsPercentsNeeded implements Runnable {
 	private static final String PASSWORD;
 	private static final Connection connection;
 	private static final Properties properties;
-	AccountDAO accountDAO = new AccountDAO();
+	private final AccountDAO accountDAO = new AccountDAO();
 
 	static {
 		try {

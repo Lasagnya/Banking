@@ -55,7 +55,7 @@ public class TransactionAPI {
 	}
 
 	@PostMapping(value = "/confirming")
-	public String finaliseTransaction(@RequestBody Transaction transaction, Model model) {
+	public String finaliseTransaction(@ModelAttribute("transaction") Transaction transaction, Model model) {
 		Optional<Transaction> optionalTransaction = transactionDAO.findById(transaction.getId());
 		if (optionalTransaction.isPresent()) {
 			if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {

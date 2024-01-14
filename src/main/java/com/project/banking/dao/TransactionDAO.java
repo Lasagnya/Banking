@@ -24,7 +24,7 @@ public class TransactionDAO {
 	private static final String PASSWORD;
 	private static final Connection connection;
 	private static final Properties properties;
-	ConfirmationCodeFunctionality confirmationCode = new ConfirmationCodeFunctionality();
+	private final ConfirmationCodeFunctionality confirmationCode = new ConfirmationCodeFunctionality();
 
 	static {
 		try {
@@ -69,6 +69,7 @@ public class TransactionDAO {
 				transaction.setAmount(rs.getDouble("amount"));
 				transaction.setCurrency(Currency.valueOf(rs.getString("transaction_currency")));
 				transaction.setStatus(TransactionStatus.valueOf(rs.getString("transaction_status")));
+				transaction.setConfirmationCode(rs.getInt("confirmation_code"));
 				return Optional.of(transaction);
 			}
 			else return Optional.empty();
@@ -84,7 +85,8 @@ public class TransactionDAO {
 	public Transaction saveTransaction(Transaction transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
-					"insert into transaction(execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, transaction_status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+					"insert into transaction(execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, transaction_status, confirmation_code) " +
+							"values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
 			preparedStatement1.setTimestamp(1, new Timestamp(transaction.getTime().getTime()));
 			preparedStatement1.setString(2, transaction.getTypeOfTransaction().toString());
@@ -95,6 +97,7 @@ public class TransactionDAO {
 			preparedStatement1.setDouble(7, transaction.getAmount());
 			preparedStatement1.setString(8, transaction.getCurrency().toString());
 			preparedStatement1.setString(9, transaction.getStatus().toString());
+			preparedStatement1.setInt(10, transaction.getConfirmationCode());
 			preparedStatement1.executeUpdate();
 			ResultSet generatedKeys = preparedStatement1.getGeneratedKeys();
 			if (generatedKeys.next()) {
