@@ -1,5 +1,6 @@
 package com.project.banking.dao;
 
+import com.project.banking.functions.ConfirmationCodeFunctionality;
 import com.project.banking.models.*;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ public class TransactionDAO {
 	private static final String PASSWORD;
 	private static final Connection connection;
 	private static final Properties properties;
+	ConfirmationCodeFunctionality confirmationCode = new ConfirmationCodeFunctionality();
 
 	static {
 		try {
@@ -180,5 +182,76 @@ public class TransactionDAO {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public Integer generateAndSaveCode(Transaction transaction) {
+		Integer code = confirmationCode.generateConfirmationCode(transaction);
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+					"update transaction set confirmation_code=? where transaction_id=?");
+			preparedStatement.setInt(1, code);
+			preparedStatement.setInt(2, transaction.getId());
+			preparedStatement.executeUpdate();
+		} catch (SQLException e) {
+			if (!e.getSQLState().equals("23505"))
+				throw new RuntimeException(e);
+		}
+		return code;
+	}
+
+	public Integer getConfirmationCode(Transaction transaction) {
+		Integer code = null;
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+					"select confirmation_code from transaction where transaction_id=?");
+			preparedStatement.setInt(1, transaction.getId());
+			ResultSet rs = preparedStatement.executeQuery();
+			if (rs.next())
+				code = rs.getInt(1);
+		} catch (SQLException e) {
+			if (!e.getSQLState().equals("23505"))
+				throw new RuntimeException(e);
+		}
+		return code;
+	}
+
+	public Transaction update(Transaction transaction) {
+		try {
+			PreparedStatement preparedStatement1 = connection.prepareStatement(
+					"update transaction set execution_time = ?, type_of_transaction = ?, sending_bank = ?, receiving_bank = ?, sending_account = ?, " +
+							"receiving_account = ?, amount = ?, transaction_currency = ?, transaction_status = ?, confirmation_code = ? where transaction_id = ?");
+			preparedStatement1.setTimestamp(1, new Timestamp(transaction.getTime().getTime()));
+			preparedStatement1.setString(2, transaction.getTypeOfTransaction().toString());
+			preparedStatement1.setInt(3, transaction.getSendingBank());
+			preparedStatement1.setInt(4, transaction.getReceivingBank());
+			preparedStatement1.setInt(5, transaction.getSendingAccount());
+			preparedStatement1.setInt(6, transaction.getReceivingAccount());
+			preparedStatement1.setDouble(7, transaction.getAmount());
+			preparedStatement1.setString(8, transaction.getCurrency().toString());
+			preparedStatement1.setString(9, transaction.getStatus().toString());
+			preparedStatement1.setInt(10, transaction.getConfirmationCode());
+			preparedStatement1.setInt(11, transaction.getId());
+			preparedStatement1.executeUpdate();
+//			makeCheck(transaction);
+		} catch (SQLException e) {
+			if (!e.getSQLState().equals("23505"))
+				throw new RuntimeException(e);
+		}
+		return transaction;
+	}
+
+	public Transaction updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+					"update transaction set transaction_status=? where transaction_id=?");
+			preparedStatement.setString(1, newStatus.toString());
+			preparedStatement.setInt(2, transaction.getId());
+			preparedStatement.executeUpdate();
+		} catch (SQLException e) {
+			if (!e.getSQLState().equals("23505"))
+				throw new RuntimeException(e);
+		}
+		transaction.setStatus(newStatus);
+		return transaction;
 	}
 }

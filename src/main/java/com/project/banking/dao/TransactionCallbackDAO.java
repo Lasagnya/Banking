@@ -1,13 +1,12 @@
 package com.project.banking.dao;
 
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionCallback;
-import com.project.banking.models.TransactionIncoming;
+import com.project.banking.models.*;
 import org.springframework.stereotype.Component;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.util.Optional;
 import java.util.Properties;
 
 @Component
@@ -48,18 +47,11 @@ public class TransactionCallbackDAO {
 	public void saveTransaction(TransactionCallback transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
-					"insert into transaction_callback(id, invoice_id, status, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, callback_uri) " +
-							"values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+					"insert into transaction_callback(id, invoice_id, callback_uri) " +
+							"values(?, ?, ?)");
 			preparedStatement1.setInt(1, transaction.getId());
 			preparedStatement1.setInt(2, transaction.getInvoiceId());
-			preparedStatement1.setString(3, transaction.getStatus().toString());
-			preparedStatement1.setInt(4, transaction.getSendingBank());
-			preparedStatement1.setInt(5, transaction.getReceivingBank());
-			preparedStatement1.setInt(6, transaction.getSendingAccount());
-			preparedStatement1.setInt(7, transaction.getReceivingAccount());
-			preparedStatement1.setDouble(8, transaction.getAmount());
-			preparedStatement1.setString(9, transaction.getCurrency().toString());
-			preparedStatement1.setString(10, transaction.getCallbackUri());
+			preparedStatement1.setString(3, transaction.getCallbackUri());
 			preparedStatement1.executeUpdate();
 		} catch (SQLException e) {
 			if (!e.getSQLState().equals("23505"))
@@ -70,5 +62,33 @@ public class TransactionCallbackDAO {
 	public void fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming) {
 		TransactionCallback transactionCallback = new TransactionCallback(transaction, transactionIncoming);
 		saveTransaction(transactionCallback);
+	}
+
+	public Optional<TransactionCallback> findById(int id) {
+		TransactionCallback transaction = new TransactionCallback();
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement("select id, invoice_id, callback_uri, execution_time, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, transaction_status from " +
+					"transaction_callback join public.transaction on transaction_callback.id = transaction.transaction_id " +
+					"where id=?");
+			preparedStatement.setInt(1, id);
+			ResultSet rs = preparedStatement.executeQuery();
+			if (rs.next()) {
+				transaction.setId(rs.getInt("transaction_id"));
+				transaction.setInvoiceId(rs.getInt("invoice_id"));
+				transaction.setCallbackUri(rs.getString("callback_uri"));
+				transaction.setTime(rs.getTimestamp("execution_time"));
+				transaction.setSendingBank(rs.getInt("sending_bank"));
+				transaction.setReceivingBank(rs.getInt("receiving_bank"));
+				transaction.setSendingAccount(rs.getInt("sending_account"));
+				transaction.setReceivingAccount(rs.getInt("receiving_account"));
+				transaction.setAmount(rs.getDouble("amount"));
+				transaction.setCurrency(Currency.valueOf(rs.getString("transaction_currency")));
+				transaction.setStatus(TransactionStatus.valueOf(rs.getString("transaction_status")));
+				return Optional.of(transaction);
+			}
+			else return Optional.empty();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

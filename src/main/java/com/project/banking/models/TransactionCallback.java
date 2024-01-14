@@ -1,9 +1,12 @@
 package com.project.banking.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.Date;
 
 @Getter
 @Setter
@@ -12,22 +15,32 @@ public class TransactionCallback {
 	/** id внутри банкинга */
 	private int id;
 
+	/** поле время совершения транзации */
+	private Date time;
+
 	/** id клиента */
 	private int invoiceId;
 
 	/** статус транзакции банкинга */
+	@Transient
 	private TransactionStatus status;
 
+	@Transient
 	private int sendingBank;
 
+	@Transient
 	private int receivingBank;
 
+	@Transient
 	private int sendingAccount;
 
+	@Transient
 	private int receivingAccount;
 
+	@Transient
 	private double amount;
 
+	@Transient
 	private Currency currency;
 
 	@JsonIgnore
@@ -35,6 +48,7 @@ public class TransactionCallback {
 
 	public TransactionCallback(Transaction transaction, TransactionIncoming transactionIncoming) {
 		id = transaction.getId();
+		time = transaction.getTime();
 		invoiceId = transactionIncoming.getInvoiceId();
 		status = transaction.getStatus();
 		sendingBank = transaction.getSendingBank();

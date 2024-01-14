@@ -45,6 +45,8 @@ public class Transaction {
 
 	private TransactionStatus status;
 
+	private Integer confirmationCode = null;
+
 	/**
 	 *
 	 * @param time время выполнения
