@@ -97,7 +97,7 @@ public class TransactionDAO {
 			preparedStatement1.setDouble(7, transaction.getAmount());
 			preparedStatement1.setString(8, transaction.getCurrency().toString());
 			preparedStatement1.setString(9, transaction.getStatus().toString());
-			preparedStatement1.setInt(10, transaction.getConfirmationCode());
+			preparedStatement1.setObject(10, transaction.getConfirmationCode(), Types.INTEGER);
 			preparedStatement1.executeUpdate();
 			ResultSet generatedKeys = preparedStatement1.getGeneratedKeys();
 			if (generatedKeys.next()) {

@@ -1,6 +1,7 @@
 package com.project.banking.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class TransactionCallback {
 
 	/** статус транзакции банкинга */
 	@Transient
+	@JsonInclude
 	private TransactionStatus status;
 
 	@Transient

@@ -47,9 +47,6 @@ public class TransactionAPI {
 		Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);
 		transactionDAO.generateAndSaveCode(transaction);
 		transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);
-//		ModelAndView modelAndView = new ModelAndView();
-//		modelAndView.addObject("transaction", transaction);
-//		modelAndView.setViewName("confirm");
 		model.addAttribute("transaction", transaction);
 		return "confirm";
 	}
