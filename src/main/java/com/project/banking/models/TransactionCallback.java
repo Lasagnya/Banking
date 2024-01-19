@@ -61,4 +61,20 @@ public class TransactionCallback {
 		currency = transaction.getCurrency();
 		callbackUri = transactionIncoming.getCallbackUri();
 	}
+
+	public static TransactionCallback generateInvalidCallback(TransactionIncoming transactionIncoming) {
+		TransactionCallback transactionCallback = new TransactionCallback();
+		transactionCallback.id = 0;
+		transactionCallback.time = new Date();
+		transactionCallback.invoiceId = transactionIncoming.getInvoiceId();
+		transactionCallback.status = TransactionStatus.INVALID;
+		transactionCallback.sendingBank = 0;
+		transactionCallback.receivingBank = transactionIncoming.getReceivingBank();
+		transactionCallback.sendingAccount = transactionIncoming.getSendingAccount();
+		transactionCallback.receivingAccount = transactionIncoming.getReceivingAccount();
+		transactionCallback.amount = transactionIncoming.getAmount();
+		transactionCallback.currency = transactionIncoming.getCurrency();
+		transactionCallback.callbackUri = transactionIncoming.getCallbackUri();
+		return transactionCallback;
+	}
 }

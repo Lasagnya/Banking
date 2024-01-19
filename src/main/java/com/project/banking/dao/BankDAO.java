@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -68,6 +69,23 @@ public class BankDAO {
 			throw new RuntimeException(e);
 		}
 		return banks;
+	}
+
+	public Optional<Bank> findById(int id) {
+		Bank bank = new Bank();
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement("select * from bank where bank_id=?");
+			preparedStatement.setInt(1, id);
+			ResultSet rs = preparedStatement.executeQuery();
+			if (rs.next()) {
+				bank.setId(rs.getInt("bank_id"));
+				bank.setName(rs.getString("bank_name"));
+				return Optional.of(bank);
+			}
+			else return Optional.empty();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**
