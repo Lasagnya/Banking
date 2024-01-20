@@ -16,4 +16,9 @@ public class ConfirmationCodeFunctionality {
 	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode) {
 		return receivedTransaction.getConfirmationCode().equals(referenceCode);
 	}
+
+	public void expiryTimer(Transaction transaction) {
+		Thread thread = new ExpiryFunctionality(transaction);
+		thread.start();
+	}
 }

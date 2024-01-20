@@ -29,56 +29,58 @@ public class TransactionAPI {
 		this.confirmationCode = confirmationCode;
 	}
 
-	public RestClient.RequestBodySpec getClientConnection(TransactionCallback transactionCallback) {
+	public static RestClient.RequestBodySpec getClientConnection(TransactionCallback transactionCallback) {
 		RestClient restClient = RestClient.create(transactionCallback.getCallbackUri());
 		return restClient.post().contentType(MediaType.APPLICATION_JSON);
 	}
 
 	@PostMapping(value = "/pay", produces = MediaType.TEXT_HTML_VALUE)
 	public String makeTransaction(@RequestBody TransactionIncoming transactionIncoming, Model model) {
-		int errors = TransactionVerification.verify(transactionIncoming);
-		if (errors == 0) {
-			Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);
-			transactionDAO.generateAndSaveCode(transaction);
-			transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);
+		int errors = TransactionVerification.verify(transactionIncoming);													// Верификация транзакции
+		if (errors == 0) {																									// Если ошибок нет, то
+			Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
+			transactionDAO.generateAndSaveCode(transaction);																// генерируем код подтверждения
+			transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
 			model.addAttribute("transaction", transaction);
-			return "confirm";
+			confirmationCode.expiryTimer(transaction);																		// задаём таймер просрочки подтверждения
+			return "confirm";																								// посылаем пользователю страницу подтверждения
 		}
-		if (errors % 10 != 0 || (errors / 10) % 10 != 0 || (errors / 100) % 10 != 0) {
-			TransactionCallback transactionCallback = TransactionCallback.generateInvalidCallback(transactionIncoming);
-			RestClient restClient = RestClient.create(transactionCallback.getCallbackUri());
-			restClient.post().contentType(MediaType.APPLICATION_JSON).body(transactionCallback).retrieve();
+		if (errors % 10 != 0 || (errors / 10) % 10 != 0 || (errors / 100) % 10 != 0) {										// Если ошибки с банком или счётом, то
+			TransactionCallback transactionCallback = TransactionCallback.generateInvalidCallback(transactionIncoming);		// генерируем callback со статусом invalid
+			getClientConnection(transactionCallback).body(transactionCallback).retrieve();									// отправляем клиенту
 		}
-		else {
-			Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);
-			transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.INVALID);
+		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
+			Transaction transaction = transactionDAO.fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
+			transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.INVALID);					// обновляем статус транзакции на invalid
+			transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
 			TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();
-			RestClient restClient = RestClient.create(transactionCallback.getCallbackUri());
-			restClient.post().contentType(MediaType.APPLICATION_JSON).body(transactionCallback).retrieve();
+			getClientConnection(transactionCallback).body(transactionCallback).retrieve();									// отправляем клиенту callback
 		}
-		return "error";
+		return "error";																										// отправляем пользователю страницу с ошибкой
 	}
 
 	@PostMapping(value = "/confirming")
 	public String finaliseTransaction(@ModelAttribute("transaction") Transaction transaction, Model model) {
 		Optional<Transaction> optionalTransaction = transactionDAO.findById(transaction.getId());
-		if (optionalTransaction.isPresent()) {
-			if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {
-				transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.PAID);
-				TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();
-				RestClient restClient = RestClient.create(transactionCallback.getCallbackUri());
-				restClient.post().contentType(MediaType.APPLICATION_JSON).body(transactionCallback).retrieve();
-				return "successful";
-			} else {
-				transaction = optionalTransaction.get();
-				transaction.setConfirmationCode(null);
-				model.addAttribute("transaction", transaction);
-				return "confirm";
+		if (optionalTransaction.isPresent()) {																				// Если транзакция существует
+			if (optionalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
+				return "expired";
 			}
+			if (optionalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
+				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
+					transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.PAID);				// при корректности обновляем статус на PAID
+					TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
+					getClientConnection(transactionCallback).body(transactionCallback).retrieve();
+					return "successful";
+				} else {																									// если нет — возвращаем снова страницу ввода кода
+					transaction = optionalTransaction.get();
+					transaction.setConfirmationCode(null);
+					model.addAttribute("transaction", transaction);
+					return "confirm";
+				}
+			}
+			else return "error";																							// если любой иной статус транзакции — возвращаем пользователю ошибку
 		}
-		else {
-			transactionDAO.updateTransactionStatus(transaction, TransactionStatus.INVALID);
-			return "error";
-		}
+		else return "error";																								// если транзакция не найдена — возвращаем ошибку
 	}
 }
