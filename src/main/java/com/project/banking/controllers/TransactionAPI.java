@@ -1,5 +1,6 @@
 package com.project.banking.controllers;
 
+import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.TransactionCallbackDAO;
 import com.project.banking.dao.TransactionDAO;
 import com.project.banking.functions.ConfirmationCodeFunctionality;
@@ -21,12 +22,14 @@ public class TransactionAPI {
 	private final TransactionDAO transactionDAO;
 	private final TransactionCallbackDAO transactionCallbackDAO;
 	private final ConfirmationCodeFunctionality confirmationCode;
+	private final AccountDAO accountDAO;
 
 	@Autowired
-	public TransactionAPI(TransactionDAO transactionDAO, TransactionCallbackDAO transactionCallbackDAO, ConfirmationCodeFunctionality confirmationCode) {
+	public TransactionAPI(TransactionDAO transactionDAO, TransactionCallbackDAO transactionCallbackDAO, ConfirmationCodeFunctionality confirmationCode, AccountDAO accountDAO) {
 		this.transactionDAO = transactionDAO;
 		this.transactionCallbackDAO = transactionCallbackDAO;
 		this.confirmationCode = confirmationCode;
+		this.accountDAO = accountDAO;
 	}
 
 	public static RestClient.RequestBodySpec getClientConnection(TransactionCallback transactionCallback) {
@@ -68,7 +71,8 @@ public class TransactionAPI {
 			}
 			if (optionalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
 				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
-					transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.PAID);				// при корректности обновляем статус на PAID
+					accountDAO.transfer(optionalTransaction.get());															// при корректности переводим средства
+					transaction = transactionDAO.updateTransactionStatus(transaction, TransactionStatus.PAID);				// обновляем статус на PAID
 					TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
 					getClientConnection(transactionCallback).body(transactionCallback).retrieve();
 					return "successful";
