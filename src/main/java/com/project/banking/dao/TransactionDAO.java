@@ -1,6 +1,7 @@
 package com.project.banking.dao;
 
 import com.project.banking.functions.ConfirmationCodeFunctionality;
+import com.project.banking.functions.ConfirmationCodeFunctionalityImpl;
 import com.project.banking.models.*;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +25,6 @@ public class TransactionDAO {
 	private static final String PASSWORD;
 	private static final Connection connection;
 	private static final Properties properties;
-	private final ConfirmationCodeFunctionality confirmationCode = new ConfirmationCodeFunctionality();
 
 	static {
 		try {
@@ -114,10 +114,10 @@ public class TransactionDAO {
 		return transaction;
 	}
 
-	public Transaction fillAndSave(TransactionIncoming transactionIncoming) {
-		Transaction transaction = new Transaction(transactionIncoming);
-		return saveTransaction(transaction);
-	}
+//	public Transaction fillAndSave(TransactionIncoming transactionIncoming) {
+//		Transaction transaction = new Transaction(transactionIncoming);
+//		return saveTransaction(transaction);
+//	}
 
 	/**
 	 * Создание чека по транзакции
@@ -187,19 +187,32 @@ public class TransactionDAO {
 		}
 	}
 
-	public Integer generateAndSaveCode(Transaction transaction) {
-		Integer code = confirmationCode.generateConfirmationCode(transaction);
+//	public Integer generateAndSaveCode(Transaction transaction) {
+//		Integer code = confirmationCode.generateConfirmationCode(transaction);
+//		try {
+//			PreparedStatement preparedStatement = connection.prepareStatement(
+//					"update transaction set confirmation_code=? where transaction_id=?");
+//			preparedStatement.setInt(1, code);
+//			preparedStatement.setInt(2, transaction.getId());
+//			preparedStatement.executeUpdate();
+//		} catch (SQLException e) {
+//			if (!e.getSQLState().equals("23505"))
+//				throw new RuntimeException(e);
+//		}
+//		return code;
+//	}
+
+	public void saveConfirmationCode(int id, Integer code) {
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"update transaction set confirmation_code=? where transaction_id=?");
 			preparedStatement.setInt(1, code);
-			preparedStatement.setInt(2, transaction.getId());
+			preparedStatement.setInt(2, id);
 			preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			if (!e.getSQLState().equals("23505"))
 				throw new RuntimeException(e);
 		}
-		return code;
 	}
 
 	public Integer getConfirmationCode(Transaction transaction) {

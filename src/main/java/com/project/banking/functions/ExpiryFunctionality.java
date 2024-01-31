@@ -1,21 +1,23 @@
 package com.project.banking.functions;
 
-import com.project.banking.controllers.TransactionAPI;
-import com.project.banking.dao.TransactionCallbackDAO;
-import com.project.banking.dao.TransactionDAO;
 import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionCallback;
 import com.project.banking.models.TransactionStatus;
+import com.project.banking.services.TransactionsService;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+@Service
 public class ExpiryFunctionality extends Thread {
-	private final TransactionDAO transactionDAO = new TransactionDAO();
-	private final TransactionCallbackDAO callbackDAO = new TransactionCallbackDAO();
+	private final TransactionsService transactionsService;
+	@Setter
 	private Transaction transaction;
 
-	public ExpiryFunctionality(Transaction transaction) {
-		this.transaction = transaction;
+	@Autowired
+	public ExpiryFunctionality(TransactionsService transactionsService) {
+		this.transactionsService = transactionsService;
 	}
 
 	@Override
@@ -25,11 +27,10 @@ public class ExpiryFunctionality extends Thread {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		transaction = transactionDAO.findById(transaction.getId()).get();
+		transaction = transactionsService.findById(transaction.getId()).get();
 		if (transaction.getStatus() != TransactionStatus.PAID) {
-			transactionDAO.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
-			TransactionCallback transactionCallback = callbackDAO.findById(transaction.getId()).get();
-			TransactionAPI.getClientConnection(transactionCallback).body(transactionCallback).retrieve();
+			transactionsService.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
+			transactionsService.sendExpiredTransaction(transaction);
 		}
 	}
 }

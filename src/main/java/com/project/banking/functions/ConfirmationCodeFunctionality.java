@@ -1,24 +1,11 @@
 package com.project.banking.functions;
 
 import com.project.banking.models.Transaction;
-import org.springframework.stereotype.Component;
 
-import java.util.Random;
+public interface ConfirmationCodeFunctionality {
+	public Integer generateConfirmationCode(Transaction transaction);
 
-@Component
-public class ConfirmationCodeFunctionality {
+	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode);
 
-	public Integer generateConfirmationCode(Transaction transaction) {
-		Random random = new Random();
-		return random.nextInt(10);
-	}
-
-	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode) {
-		return receivedTransaction.getConfirmationCode().equals(referenceCode);
-	}
-
-	public void expiryTimer(Transaction transaction) {
-		Thread thread = new ExpiryFunctionality(transaction);
-		thread.start();
-	}
+	public void expiryTimer(Transaction transaction);
 }
