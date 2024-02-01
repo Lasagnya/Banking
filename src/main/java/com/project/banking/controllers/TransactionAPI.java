@@ -22,7 +22,7 @@ public class TransactionAPI {
 	}
 
 	@PostMapping(value = "/confirming")
-	public FinalisingTransactionResult finaliseTransaction(Transaction transaction) {
+	public FinalisingTransactionResult finaliseTransaction(@RequestBody Transaction transaction) {
 		return transactionsService.finaliseTransaction(transaction);
 	}
 }

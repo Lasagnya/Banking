@@ -6,7 +6,9 @@ import com.project.banking.dao.TransactionDAO;
 import com.project.banking.functions.ConfirmationCodeFunctionality;
 import com.project.banking.functions.TransactionVerification;
 import com.project.banking.models.*;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -14,13 +16,13 @@ import java.util.Optional;
 @Service
 public class TransactionsServiceImpl implements TransactionsService {
 	private final TransactionDAO transactionDAO;
-	private final ConfirmationCodeFunctionality confirmationCode;
+	private ConfirmationCodeFunctionality confirmationCode;
 	private final TransactionCallbackDAO transactionCallbackDAO;
 	private final AccountDAO accountDAO;
 	private final CallbackClient callbackClient;
 
 	@Autowired
-	public TransactionsServiceImpl(TransactionDAO transactionDAO, ConfirmationCodeFunctionality confirmationCodeFunctionality, TransactionCallbackDAO transactionCallbackDAO, AccountDAO accountDAO, CallbackClient callbackClient) {
+	public TransactionsServiceImpl(TransactionDAO transactionDAO, @Lazy ConfirmationCodeFunctionality confirmationCodeFunctionality, TransactionCallbackDAO transactionCallbackDAO, AccountDAO accountDAO, CallbackClient callbackClient) {
 		this.transactionDAO = transactionDAO;
 		this.confirmationCode = confirmationCodeFunctionality;
 		this.transactionCallbackDAO = transactionCallbackDAO;

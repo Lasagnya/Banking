@@ -8,10 +8,10 @@ import java.util.Random;
 
 @Component
 public class ConfirmationCodeFunctionalityImpl implements ConfirmationCodeFunctionality {
-	private final ExpiryFunctionality expiryFunctionality;
+	private ExpiryFunctionality expiryFunctionality;
 
 	@Autowired
-	public ConfirmationCodeFunctionalityImpl(ExpiryFunctionality expiryFunctionality) {
+	public void setExpiryFunctionality(ExpiryFunctionality expiryFunctionality) {
 		this.expiryFunctionality = expiryFunctionality;
 	}
 

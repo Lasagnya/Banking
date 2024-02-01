@@ -2,6 +2,7 @@ package com.project.banking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.banking.models.Currency;
+import com.project.banking.models.Transaction;
 import com.project.banking.models.TransactionIncoming;
 import com.project.banking.models.TransactionStatus;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.*;
@@ -80,5 +83,20 @@ public class TransactionApiTest {
 				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
 				.andExpect(jsonPath("$.invoiceId", is(22)))
 				.andExpect(jsonPath("$.amount", is(100.0)));
+	}
+
+	@Test
+	public void finaliseTransaction_success() throws Exception {
+		Transaction transaction = new Transaction();
+		transaction.setConfirmationCode(0);
+		transaction.setId(25);
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/confirming")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transaction));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andDo(print());
 	}
 }
