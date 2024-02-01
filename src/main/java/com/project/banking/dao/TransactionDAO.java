@@ -1,7 +1,5 @@
 package com.project.banking.dao;
 
-import com.project.banking.functions.ConfirmationCodeFunctionality;
-import com.project.banking.functions.ConfirmationCodeFunctionalityImpl;
 import com.project.banking.models.*;
 import org.springframework.stereotype.Component;
 

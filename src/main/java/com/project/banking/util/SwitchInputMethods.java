@@ -1,4 +1,4 @@
-package com.project.banking.functions;
+package com.project.banking.util;
 
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.BankDAO;

@@ -2,9 +2,9 @@ package com.project.banking.controllers;
 
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.UserDAO;
-import com.project.banking.functions.ChargingOfPercents;
-import com.project.banking.functions.IsPercentsNeeded;
-import com.project.banking.functions.SwitchInputMethods;
+import com.project.banking.util.ChargingOfPercents;
+import com.project.banking.util.IsPercentsNeeded;
+import com.project.banking.util.SwitchInputMethods;
 import com.project.banking.models.*;
 
 import java.time.LocalDateTime;
