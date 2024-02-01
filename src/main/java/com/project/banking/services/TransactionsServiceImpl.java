@@ -1,7 +1,6 @@
 package com.project.banking.services;
 
 import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.TransactionCallbackDAO;
 import com.project.banking.dao.TransactionDAO;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
@@ -16,17 +15,19 @@ import java.util.Optional;
 public class TransactionsServiceImpl implements TransactionsService {
 	private final TransactionDAO transactionDAO;
 	private ConfirmationCodeFunctionality confirmationCode;
-	private final TransactionCallbackDAO transactionCallbackDAO;
+	private final TransactionsCallbackService transactionsCallbackService;
 	private final AccountDAO accountDAO;
 	private final CallbackClient callbackClient;
+	private final TransactionVerification transactionVerification;
 
 	@Autowired
-	public TransactionsServiceImpl(TransactionDAO transactionDAO, @Lazy ConfirmationCodeFunctionality confirmationCodeFunctionality, TransactionCallbackDAO transactionCallbackDAO, AccountDAO accountDAO, CallbackClient callbackClient) {
+	public TransactionsServiceImpl(TransactionDAO transactionDAO, @Lazy ConfirmationCodeFunctionality confirmationCodeFunctionality, TransactionsCallbackService transactionsCallbackService, AccountDAO accountDAO, CallbackClient callbackClient, TransactionVerification transactionVerification) {
 		this.transactionDAO = transactionDAO;
 		this.confirmationCode = confirmationCodeFunctionality;
-		this.transactionCallbackDAO = transactionCallbackDAO;
+		this.transactionsCallbackService = transactionsCallbackService;
 		this.accountDAO = accountDAO;
 		this.callbackClient = callbackClient;
+		this.transactionVerification = transactionVerification;
 	}
 
 	@Override
@@ -73,17 +74,17 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 	@Override
 	public TransactionCallback createTransaction(TransactionIncoming transactionIncoming) {
-		int errors = TransactionVerification.verify(transactionIncoming);													// Верификация транзакции
+		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
 		if (errors == 0) {																									// Если ошибок нет, то
 			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
 			generateAndSaveCode(transaction);																// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			return transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
 			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
 			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);					// обновляем статус транзакции на invalid
-			return transactionCallbackDAO.fillAndSave(transaction, transactionIncoming);									// сохраняем callback в бд
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);									// сохраняем callback в бд
 		}
 		else {																				// Если ошибки с банком или счётом, то
 			return TransactionCallback.generateInvalidCallback(transactionIncoming);		// генерируем callback со статусом invalid
@@ -91,7 +92,7 @@ public class TransactionsServiceImpl implements TransactionsService {
 	}
 
 	public void sendExpiredTransaction(Transaction transaction) {
-		TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();
+		TransactionCallback transactionCallback = transactionsCallbackService.findById(transaction.getId()).get();
 		callbackClient.sendTransaction(transactionCallback);
 	}
 
@@ -106,7 +107,7 @@ public class TransactionsServiceImpl implements TransactionsService {
 				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
 					accountDAO.transfer(optionalTransaction.get());															// при корректности переводим средства
 					transaction = updateTransactionStatus(transaction, TransactionStatus.PAID);								// обновляем статус на PAID
-					TransactionCallback transactionCallback = transactionCallbackDAO.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
+					TransactionCallback transactionCallback = transactionsCallbackService.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
 					callbackClient.sendTransaction(transactionCallback);
 					return new FinalisingTransactionResult(transaction, new ApiError(0));
 				} else {
