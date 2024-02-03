@@ -59,11 +59,11 @@ public class TransactionCallbackDAO {
 		}
 	}
 
-	public TransactionCallback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming) {
-		TransactionCallback transactionCallback = new TransactionCallback(transaction, transactionIncoming);
-		saveTransaction(transactionCallback);
-		return transactionCallback;
-	}
+//	public TransactionCallback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming) {
+//		TransactionCallback transactionCallback = new TransactionCallback(transaction, transactionIncoming);
+//		saveTransaction(transactionCallback);
+//		return transactionCallback;
+//	}
 
 	public Optional<TransactionCallback> findById(int id) {
 		TransactionCallback transaction = new TransactionCallback();

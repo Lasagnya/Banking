@@ -254,7 +254,7 @@ public class TransactionDAO {
 		return transaction;
 	}
 
-	public Transaction updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
+	public void updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"update transaction set transaction_status=? where transaction_id=?");
@@ -265,7 +265,5 @@ public class TransactionDAO {
 			if (!e.getSQLState().equals("23505"))
 				throw new RuntimeException(e);
 		}
-		transaction.setStatus(newStatus);
-		return transaction;
 	}
 }

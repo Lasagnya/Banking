@@ -1,26 +1,40 @@
 package com.project.banking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.banking.models.Currency;
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionIncoming;
-import com.project.banking.models.TransactionStatus;
+import com.project.banking.controllers.TransactionAPI;
+import com.project.banking.dao.*;
+import com.project.banking.models.*;
+import com.project.banking.services.*;
+import com.project.banking.util.ConfirmationCodeFunctionality;
+import com.project.banking.util.TransactionVerification;
+import com.project.banking.util.TransactionVerificationImpl;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.*;
 
-@SpringBootTest()
+@WebMvcTest(TransactionAPI.class)
 @AutoConfigureMockMvc
 public class TransactionApiTest {
 	@Autowired
@@ -29,9 +43,44 @@ public class TransactionApiTest {
 	@Autowired
 	private ObjectMapper mapper;
 
+	@SpyBean(TransactionsServiceImpl.class)
+	private TransactionsService transactionsService;
+
+	@SpyBean(TransactionsCallbackServiceImpl.class)
+	private TransactionsCallbackService transactionsCallbackService;
+
+	@MockBean
+	private TransactionDAO transactionDAO;
+
+	@MockBean
+	private AccountDAO accountDAO;
+
+	@MockBean
+	private BankDAO bankDAO;
+
+	@MockBean
+	private UserDAO userDAO;
+
+	@MockBean
+	private TransactionCallbackDAO transactionCallbackDAO;
+
+	@MockBean
+	private TransactionVerification transactionVerification;
+
+	@MockBean
+	private ConfirmationCodeFunctionality confirmationCode;
+
+	@MockBean
+	private CallbackClient callbackClient;
+
+	private final TransactionIncoming transactionIncoming = new TransactionIncoming(22, 1, 1234, 12345678, 100.0, Currency.BYN, "http://test");
+
 	@Test
 	public void makeTransaction_succeed() throws Exception {
-		TransactionIncoming transactionIncoming = new TransactionIncoming(22, 1, 1234, 12345678, 100.0, Currency.BYN, "http://test");
+		Transaction transaction = new Transaction(transactionIncoming);
+		transaction.setId(0);
+		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(0);
+		Mockito.when(transactionDAO.saveTransaction(ArgumentMatchers.any())).thenReturn(transaction);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -40,39 +89,14 @@ public class TransactionApiTest {
 		mockMvc.perform(mockRequest)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.status", is(TransactionStatus.PENDING.toString())))
-				.andExpect(jsonPath("$.invoiceId", is(22)))
-				.andExpect(jsonPath("$.amount", is(100.0)));
+				.andExpect(jsonPath("$.invoiceId", is(transactionIncoming.getInvoiceId())))
+				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
+				.andDo(print());
 	}
 
 	@Test
 	public void makeTransaction_incorrectBank() throws Exception {
-		TransactionIncoming transactionIncoming = new TransactionIncoming(22, 5, 1234, 12345678, 100.0, Currency.BYN, "http://test");
-		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
-				.post("/api/transaction/pay")
-				.contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(transactionIncoming));
-		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())));
-	}
-
-	@Test
-	public void makeTransaction_incorrectAccount() throws Exception {
-		TransactionIncoming transactionIncoming = new TransactionIncoming(22, 1, 12345, 12345678, 100.0, Currency.BYN, "http://test");
-		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
-				.post("/api/transaction/pay")
-				.contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
-				.content(mapper.writeValueAsString(transactionIncoming));
-		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())));
-	}
-
-	@Test
-	public void makeTransaction_incorrectAmount() throws Exception {
-		TransactionIncoming transactionIncoming = new TransactionIncoming(22, 5, 1234, 12345678, 100.0, Currency.BYN, "http://test");
+		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(1);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -81,15 +105,52 @@ public class TransactionApiTest {
 		mockMvc.perform(mockRequest)
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
-				.andExpect(jsonPath("$.invoiceId", is(22)))
-				.andExpect(jsonPath("$.amount", is(100.0)));
+				.andExpect(jsonPath("$.invoiceId", is(transactionIncoming.getInvoiceId())))
+				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
+				.andDo(print());
+	}
+
+	@Test
+	public void makeTransaction_incorrectAccount() throws Exception {
+		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(10);
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/pay")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transactionIncoming));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
+				.andExpect(jsonPath("$.invoiceId", is(transactionIncoming.getInvoiceId())))
+				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
+				.andDo(print());
+	}
+
+	@Test
+	public void makeTransaction_incorrectAmount() throws Exception {
+		Transaction transaction = new Transaction(transactionIncoming);
+		transaction.setId(0);
+		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(1000);
+		Mockito.when(transactionDAO.saveTransaction(ArgumentMatchers.any())).thenReturn(transaction);
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/pay")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transactionIncoming));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
+				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
+				.andDo(print());
 	}
 
 	@Test
 	public void finaliseTransaction_success() throws Exception {
-		Transaction transaction = new Transaction();
-		transaction.setConfirmationCode(0);
-		transaction.setId(25);
+		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		TransactionCallback callback = new TransactionCallback(transaction, transactionIncoming);
+		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+		Mockito.when(confirmationCode.verifyConfirmationCode(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(true);
+		Mockito.when(transactionCallbackDAO.findById(transaction.getId())).thenReturn(Optional.of(callback));
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -97,6 +158,83 @@ public class TransactionApiTest {
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
 				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.transaction.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.transaction.status", is(TransactionStatus.PAID.toString())))
+				.andExpect(jsonPath("$.transaction.amount", is(transactionIncoming.getAmount())))
+				.andExpect(jsonPath("$.apiError.errorId", is(0)))
+				.andDo(print());
+	}
+
+	@Test
+	public void finaliseTransaction_Expired() throws Exception {
+		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.EXPIRED, 1);
+		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/confirming")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transaction));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.transaction.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.transaction.status", is(TransactionStatus.EXPIRED.toString())))
+				.andExpect(jsonPath("$.transaction.amount", is(transactionIncoming.getAmount())))
+				.andExpect(jsonPath("$.apiError.errorId", is(3)))
+				.andDo(print());
+	}
+
+	@Test
+	public void finaliseTransaction_Invalid() throws Exception {
+		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.INVALID, 1);
+		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/confirming")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transaction));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.transaction.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.transaction.status", is(TransactionStatus.INVALID.toString())))
+				.andExpect(jsonPath("$.transaction.amount", is(transactionIncoming.getAmount())))
+				.andExpect(jsonPath("$.apiError.errorId", is(4)))
+				.andDo(print());
+	}
+
+	@Test
+	public void finaliseTransaction_IncorrectCode() throws Exception {
+		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+		Mockito.when(confirmationCode.verifyConfirmationCode(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(false);
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/confirming")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transaction));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.transaction.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.transaction.status", is(TransactionStatus.PENDING.toString())))
+				.andExpect(jsonPath("$.transaction.amount", is(transactionIncoming.getAmount())))
+				.andExpect(jsonPath("$.apiError.errorId", is(2)))
+				.andDo(print());
+	}
+
+	@Test
+	public void finaliseTransaction_IncorrectId() throws Exception {
+		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.empty());
+		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+				.post("/api/transaction/confirming")
+				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(transaction));
+		mockMvc.perform(mockRequest)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.transaction.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.transaction.status", is(transaction.getStatus().toString())))
+				.andExpect(jsonPath("$.transaction.amount", is(transactionIncoming.getAmount())))
+				.andExpect(jsonPath("$.apiError.errorId", is(1)))
 				.andDo(print());
 	}
 }

@@ -1,9 +1,6 @@
 package com.project.banking.models;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Date;
 
@@ -14,7 +11,9 @@ import java.util.Date;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class Transaction {
 	/** поле id */
 	private int id;

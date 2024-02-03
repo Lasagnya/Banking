@@ -53,7 +53,9 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 	@Override
 	public Transaction updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
-		return transactionDAO.updateTransactionStatus(transaction, newStatus);
+		transactionDAO.updateTransactionStatus(transaction, newStatus);
+		transaction.setStatus(newStatus);
+		return transaction;
 	}
 
 	@Override
