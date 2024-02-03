@@ -73,25 +73,21 @@ public class TransactionsServiceImpl implements TransactionsService {
 	}
 
 	@Override
-	public ResultOperationWithTransaction createTransaction(TransactionIncoming transactionIncoming) {
+	public TransactionCallback createTransaction(TransactionIncoming transactionIncoming) {
 		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
 		if (errors == 0) {																									// Если ошибок нет, то
-			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
-			generateAndSaveCode(transaction);																				// генерируем код подтверждения
+			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
+			generateAndSaveCode(transaction);																// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			transactionsCallbackService.fillAndSave(transaction, transactionIncoming);										// сохраняем callback в бд
-			return new ResultOperationWithTransaction(transaction, new ApiError(errors));
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
-			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
-			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
-			transactionsCallbackService.fillAndSave(transaction, transactionIncoming);										// сохраняем callback в бд
-			return new ResultOperationWithTransaction(transaction, new ApiError(errors));
+			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
+			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);					// обновляем статус транзакции на invalid
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);									// сохраняем callback в бд
 		}
-		else {																												// Если ошибки с банком или счётом, то
-			Transaction transaction = new Transaction(transactionIncoming);
-			transaction.setStatus(TransactionStatus.INVALID);
-			return new ResultOperationWithTransaction(transaction, new ApiError(errors));									// генерируем callback со статусом invalid
+		else {																				// Если ошибки с банком или счётом, то
+			return TransactionCallback.generateInvalidCallback(transactionIncoming);		// генерируем callback со статусом invalid
 		}
 	}
 
@@ -101,11 +97,11 @@ public class TransactionsServiceImpl implements TransactionsService {
 	}
 
 	@Override
-	public ResultOperationWithTransaction finaliseTransaction(Transaction transaction) {
+	public FinalisingTransactionResult finaliseTransaction(Transaction transaction) {
 		Optional<Transaction> optionalTransaction = findById(transaction.getId());
 		if (optionalTransaction.isPresent()) {																				// Если транзакция существует
 			if (optionalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
-				return new ResultOperationWithTransaction(transaction, new ApiError(3));
+				return new FinalisingTransactionResult(transaction, new ApiError(3));
 			}
 			if (optionalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
 				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
@@ -113,13 +109,13 @@ public class TransactionsServiceImpl implements TransactionsService {
 					transaction = updateTransactionStatus(transaction, TransactionStatus.PAID);								// обновляем статус на PAID
 					TransactionCallback transactionCallback = transactionsCallbackService.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
 					callbackClient.sendTransaction(transactionCallback);
-					return new ResultOperationWithTransaction(transaction, new ApiError(0));
+					return new FinalisingTransactionResult(transaction, new ApiError(0));
 				} else {
-					return new ResultOperationWithTransaction(transaction, new ApiError(2));
+					return new FinalisingTransactionResult(transaction, new ApiError(2));
 				}
 			}
-			return new ResultOperationWithTransaction(transaction, new ApiError(4));									// если любой иной статус транзакции — возвращаем пользователю ошибку
+			return new FinalisingTransactionResult(transaction, new ApiError(4));									// если любой иной статус транзакции — возвращаем пользователю ошибку
 		}
-		return new ResultOperationWithTransaction(transaction, new ApiError(1));										// если транзакция не найдена — возвращаем ошибку
+		return new FinalisingTransactionResult(transaction, new ApiError(1));										// если транзакция не найдена — возвращаем ошибку
 	}
 }
