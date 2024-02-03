@@ -17,12 +17,12 @@ public class TransactionAPI {
 	}
 
 	@PostMapping(value="/pay", produces = MediaType.APPLICATION_JSON_VALUE)
-	public TransactionCallback makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {
+	public ResultOperationWithTransaction makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {
 		return transactionsService.createTransaction(transactionIncoming);
 	}
 
 	@PostMapping(value = "/confirming")
-	public FinalisingTransactionResult finaliseTransaction(@RequestBody Transaction transaction) {
+	public ResultOperationWithTransaction finaliseTransaction(@RequestBody Transaction transaction) {
 		return transactionsService.finaliseTransaction(transaction);
 	}
 }

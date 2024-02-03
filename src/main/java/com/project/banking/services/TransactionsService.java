@@ -21,9 +21,9 @@ public interface TransactionsService {
 
 	public Integer getConfirmationCode(Transaction transaction);
 
-	public TransactionCallback createTransaction(TransactionIncoming transactionIncoming);
+	public ResultOperationWithTransaction createTransaction(TransactionIncoming transactionIncoming);
 
-	public FinalisingTransactionResult finaliseTransaction(Transaction transaction);
+	public ResultOperationWithTransaction finaliseTransaction(Transaction transaction);
 
 	void sendExpiredTransaction(Transaction transaction);
 }

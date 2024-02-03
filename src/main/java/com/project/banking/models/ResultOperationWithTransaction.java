@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FinalisingTransactionResult {
+public class ResultOperationWithTransaction {
 	private Transaction transaction;
 	private ApiError apiError;
 }
