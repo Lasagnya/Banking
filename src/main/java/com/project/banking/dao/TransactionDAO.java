@@ -112,11 +112,6 @@ public class TransactionDAO {
 		return transaction;
 	}
 
-//	public Transaction fillAndSave(TransactionIncoming transactionIncoming) {
-//		Transaction transaction = new Transaction(transactionIncoming);
-//		return saveTransaction(transaction);
-//	}
-
 	/**
 	 * Создание чека по транзакции
 	 * @param transaction транзакция, по которой создаётся чек
@@ -184,21 +179,6 @@ public class TransactionDAO {
 			throw new RuntimeException(e);
 		}
 	}
-
-//	public Integer generateAndSaveCode(Transaction transaction) {
-//		Integer code = confirmationCode.generateConfirmationCode(transaction);
-//		try {
-//			PreparedStatement preparedStatement = connection.prepareStatement(
-//					"update transaction set confirmation_code=? where transaction_id=?");
-//			preparedStatement.setInt(1, code);
-//			preparedStatement.setInt(2, transaction.getId());
-//			preparedStatement.executeUpdate();
-//		} catch (SQLException e) {
-//			if (!e.getSQLState().equals("23505"))
-//				throw new RuntimeException(e);
-//		}
-//		return code;
-//	}
 
 	public void saveConfirmationCode(int id, Integer code) {
 		try {

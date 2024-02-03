@@ -78,18 +78,18 @@ public class TransactionsServiceImpl implements TransactionsService {
 	public TransactionCallback createTransaction(TransactionIncoming transactionIncoming) {
 		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
 		if (errors == 0) {																									// Если ошибок нет, то
-			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
-			generateAndSaveCode(transaction);																// генерируем код подтверждения
+			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
+			generateAndSaveCode(transaction);																				// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);											// сохраняем callback в бд
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
-			Transaction transaction = fillAndSave(transactionIncoming);										// сохраняем транзакцию в бд
-			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);					// обновляем статус транзакции на invalid
-			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);									// сохраняем callback в бд
+			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
+			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
+			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
 		}
-		else {																				// Если ошибки с банком или счётом, то
-			return TransactionCallback.generateInvalidCallback(transactionIncoming);		// генерируем callback со статусом invalid
+		else {																												// Если ошибки с банком или счётом, то
+			return TransactionCallback.generateInvalidCallback(transactionIncoming);										// генерируем callback со статусом invalid
 		}
 	}
 
