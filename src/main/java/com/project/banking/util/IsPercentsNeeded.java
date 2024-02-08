@@ -1,7 +1,7 @@
 package com.project.banking.util;
 
 import com.project.banking.dao.AccountDAO;
-import com.project.banking.models.Account;
+import com.project.banking.model.database.Account;
 
 import java.io.FileReader;
 import java.io.IOException;

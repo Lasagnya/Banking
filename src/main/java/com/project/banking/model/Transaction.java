@@ -1,5 +1,8 @@
-package com.project.banking.models;
+package com.project.banking.model;
 
+import com.project.banking.enumeration.Currency;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.enumeration.TypeOfTransaction;
 import lombok.*;
 
 import java.util.Date;

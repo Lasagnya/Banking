@@ -3,9 +3,9 @@ package com.project.banking.util;
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.BankDAO;
 import com.project.banking.dao.UserDAO;
-import com.project.banking.models.Account;
-import com.project.banking.models.Bank;
-import com.project.banking.models.Period;
+import com.project.banking.model.database.Account;
+import com.project.banking.model.database.Bank;
+import com.project.banking.enumeration.Period;
 
 import java.io.BufferedReader;
 import java.io.IOException;

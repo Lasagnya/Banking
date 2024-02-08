@@ -1,11 +1,15 @@
-package com.project.banking.controllers;
+package com.project.banking.controller;
 
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.UserDAO;
+import com.project.banking.enumeration.Currency;
+import com.project.banking.enumeration.Period;
+import com.project.banking.enumeration.TypeOfTransaction;
+import com.project.banking.model.database.Account;
+import com.project.banking.model.Transaction;
 import com.project.banking.util.ChargingOfPercents;
 import com.project.banking.util.IsPercentsNeeded;
 import com.project.banking.util.SwitchInputMethods;
-import com.project.banking.models.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

@@ -1,20 +1,25 @@
 package com.project.banking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.banking.controllers.TransactionAPI;
+import com.project.banking.client.CallbackClient;
+import com.project.banking.controller.TransactionAPI;
 import com.project.banking.dao.*;
-import com.project.banking.models.*;
-import com.project.banking.services.*;
+import com.project.banking.enumeration.Currency;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.enumeration.TypeOfTransaction;
+import com.project.banking.model.*;
+import com.project.banking.model.Transaction;
+import com.project.banking.service.*;
+import com.project.banking.service.impl.TransactionsCallbackServiceImpl;
+import com.project.banking.service.impl.TransactionsServiceImpl;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
-import com.project.banking.util.TransactionVerificationImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
@@ -23,12 +28,9 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.withSettings;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

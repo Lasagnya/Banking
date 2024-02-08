@@ -1,5 +1,6 @@
-package com.project.banking.models;
+package com.project.banking.model;
 
+import com.project.banking.enumeration.Currency;
 import lombok.*;
 
 /**

@@ -1,8 +1,8 @@
-package com.project.banking.services;
+package com.project.banking.service;
 
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionCallback;
-import com.project.banking.models.TransactionIncoming;
+import com.project.banking.model.Transaction;
+import com.project.banking.model.TransactionCallback;
+import com.project.banking.model.TransactionIncoming;
 
 import java.util.Optional;
 

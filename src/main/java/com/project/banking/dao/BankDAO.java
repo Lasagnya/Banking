@@ -1,6 +1,7 @@
 package com.project.banking.dao;
 
-import com.project.banking.models.Bank;
+import com.project.banking.model.database.Bank;
+import org.springframework.stereotype.Component;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.Properties;
  *  с таблицей bank.
  */
 
+@Component
 public class BankDAO {
 	private static final String DRIVER;
 	private static final String URL;

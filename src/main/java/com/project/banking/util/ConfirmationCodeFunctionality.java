@@ -1,11 +1,31 @@
 package com.project.banking.util;
 
-import com.project.banking.models.Transaction;
+import com.project.banking.model.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public interface ConfirmationCodeFunctionality {
-	public Integer generateConfirmationCode(Transaction transaction);
+import java.util.Random;
 
-	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode);
+@Component
+public class ConfirmationCodeFunctionality {
+	private ExpiryFunctionality expiryFunctionality;
 
-	public void expiryTimer(Transaction transaction);
+	@Autowired
+	public void setExpiryFunctionality(ExpiryFunctionality expiryFunctionality) {
+		this.expiryFunctionality = expiryFunctionality;
+	}
+
+	public Integer generateConfirmationCode(Transaction transaction) {
+		Random random = new Random();
+		return random.nextInt(10);
+	}
+
+	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode) {
+		return receivedTransaction.getConfirmationCode().equals(referenceCode);
+	}
+
+	public void expiryTimer(Transaction transaction) {
+		expiryFunctionality.setTransaction(transaction);
+		expiryFunctionality.start();
+	}
 }

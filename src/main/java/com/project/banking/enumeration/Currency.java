@@ -1,4 +1,4 @@
-package com.project.banking.models;
+package com.project.banking.enumeration;
 
 /**
  *  Варианты валют

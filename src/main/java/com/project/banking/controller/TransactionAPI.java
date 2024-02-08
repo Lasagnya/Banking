@@ -1,7 +1,8 @@
-package com.project.banking.controllers;
+package com.project.banking.controller;
 
-import com.project.banking.models.*;
-import com.project.banking.services.TransactionsService;
+import com.project.banking.model.*;
+import com.project.banking.model.Transaction;
+import com.project.banking.service.TransactionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;

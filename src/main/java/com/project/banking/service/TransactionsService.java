@@ -1,6 +1,8 @@
-package com.project.banking.services;
+package com.project.banking.service;
 
-import com.project.banking.models.*;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.model.*;
+import com.project.banking.model.Transaction;
 
 import java.util.Optional;
 

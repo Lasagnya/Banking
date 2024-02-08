@@ -3,7 +3,8 @@ package com.project.banking.dao;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import lombok.Getter;
-import com.project.banking.models.User;
+import com.project.banking.model.User;
+import org.springframework.stereotype.Component;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Scanner;
 
+@Component
 public class UserDAO {
 	private static final String DRIVER;
 	private static final String URL;

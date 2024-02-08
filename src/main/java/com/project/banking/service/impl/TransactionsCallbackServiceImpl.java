@@ -1,10 +1,11 @@
-package com.project.banking.services;
+package com.project.banking.service.impl;
 
 import com.project.banking.dao.TransactionCallbackDAO;
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionCallback;
-import com.project.banking.models.TransactionIncoming;
-import com.project.banking.models.TransactionStatus;
+import com.project.banking.model.Transaction;
+import com.project.banking.model.TransactionCallback;
+import com.project.banking.model.TransactionIncoming;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.service.TransactionsCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,10 +1,15 @@
-package com.project.banking.services;
+package com.project.banking.service.impl;
 
 import com.project.banking.dao.AccountDAO;
 import com.project.banking.dao.TransactionDAO;
+import com.project.banking.client.CallbackClient;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.model.Transaction;
+import com.project.banking.service.TransactionsCallbackService;
+import com.project.banking.service.TransactionsService;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
-import com.project.banking.models.*;
+import com.project.banking.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;

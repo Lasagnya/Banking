@@ -1,8 +1,8 @@
 package com.project.banking.util;
 
-import com.project.banking.models.Transaction;
-import com.project.banking.models.TransactionStatus;
-import com.project.banking.services.TransactionsService;
+import com.project.banking.model.Transaction;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.service.TransactionsService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

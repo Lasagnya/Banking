@@ -1,6 +1,6 @@
-package com.project.banking.services;
+package com.project.banking.client;
 
-import com.project.banking.models.TransactionCallback;
+import com.project.banking.model.TransactionCallback;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 

@@ -1,7 +1,9 @@
-package com.project.banking.models;
+package com.project.banking.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.project.banking.enumeration.Currency;
+import com.project.banking.enumeration.TransactionStatus;
 import jakarta.persistence.Transient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

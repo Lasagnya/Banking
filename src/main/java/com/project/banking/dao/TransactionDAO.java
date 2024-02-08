@@ -1,6 +1,9 @@
 package com.project.banking.dao;
 
-import com.project.banking.models.*;
+import com.project.banking.enumeration.Currency;
+import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.enumeration.TypeOfTransaction;
+import com.project.banking.model.Transaction;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
