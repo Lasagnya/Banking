@@ -3,13 +3,15 @@ package com.project.banking.service;
 import com.project.banking.model.Transaction;
 import com.project.banking.model.TransactionCallback;
 import com.project.banking.model.TransactionIncoming;
+import com.project.banking.model.database.TransactionCallbackDb;
+import com.project.banking.model.database.TransactionDb;
 
 import java.util.Optional;
 
 public interface TransactionsCallbackService {
-	void saveTransaction(TransactionCallback transaction);
+	void saveTransaction(TransactionCallbackDb transaction);
 
-	TransactionCallback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming);
+	TransactionCallback fillAndSave(TransactionDb transaction, TransactionIncoming transactionIncoming);
 
 	Optional<TransactionCallback> findById(int id);
 }

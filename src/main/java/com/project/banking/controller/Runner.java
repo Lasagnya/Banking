@@ -7,6 +7,7 @@ import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 import com.project.banking.util.ChargingOfPercents;
 import com.project.banking.util.IsPercentsNeeded;
 import com.project.banking.util.SwitchInputMethods;
@@ -75,7 +76,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите перевести:");
 					double amount = sim.getAmount(sendingAccount);
 
-					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.TRANSFER, 1, receivingBank, sendingAccount.getId(), receivingAccount, amount, Currency.BYN);
+					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.TRANSFER, 1, receivingBank, sendingAccount.getId(), receivingAccount, amount, Currency.BYN);
 					accountDAO.transfer(transaction);
 					break;
 				}
@@ -86,7 +87,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите снять:");
 					double amount = sim.getAmount(sendingAccount);
 
-					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.WITHDRAWAL, 1, 1, sendingAccount.getId(), sendingAccount.getId(), amount, Currency.BYN);
+					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.WITHDRAWAL, 1, 1, sendingAccount.getId(), sendingAccount.getId(), amount, Currency.BYN);
 					accountDAO.withdrawal(transaction);
 					break;
 				}
@@ -99,7 +100,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите перевести:");
 					double amount = scanner.nextDouble();
 
-					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.PAYIN, 1, receivingBank, 1, receivingAccount, amount, Currency.BYN);
+					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.PAYIN, 1, receivingBank, 1, receivingAccount, amount, Currency.BYN);
 					accountDAO.payIn(transaction);
 					break;
 				}

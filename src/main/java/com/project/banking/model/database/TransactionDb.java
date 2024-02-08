@@ -1,16 +1,12 @@
-package com.project.banking.model;
+package com.project.banking.model.database;
 
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.model.TransactionIncoming;
 import lombok.*;
 
 import java.util.Date;
-
-/**
- *  Класс транзакций
- */
 
 @Getter
 @Setter
@@ -18,7 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class Transaction {
+public class TransactionDb {
 	/** поле id */
 	private int id;
 
@@ -48,6 +44,8 @@ public class Transaction {
 
 	private TransactionStatus status;
 
+	private Integer confirmationCode = null;
+
 	/**
 	 *
 	 * @param time время выполнения
@@ -59,7 +57,7 @@ public class Transaction {
 	 * @param amount сумма транзации
 	 * @param currency валюта транзакции
 	 */
-	public Transaction(Date time, TypeOfTransaction typeOfTransaction, int sendingBank, int receivingBank, int sendingAccount, int receivingAccount, double amount, Currency currency) {
+	public TransactionDb(Date time, TypeOfTransaction typeOfTransaction, int sendingBank, int receivingBank, int sendingAccount, int receivingAccount, double amount, Currency currency) {
 		this.time = time;
 		this.typeOfTransaction = typeOfTransaction;
 		this.sendingBank = sendingBank;
@@ -70,7 +68,7 @@ public class Transaction {
 		this.currency = currency;
 	}
 
-	public Transaction(TransactionIncoming transactionIncoming) {
+	public TransactionDb(TransactionIncoming transactionIncoming) {
 		time = new Date();
 		typeOfTransaction = TypeOfTransaction.TRANSFER;
 		receivingBank = transactionIncoming.getReceivingBank();
@@ -80,18 +78,5 @@ public class Transaction {
 		amount = transactionIncoming.getAmount();
 		currency = transactionIncoming.getCurrency();
 		status = TransactionStatus.PENDING;
-	}
-
-	public Transaction(TransactionDb transactionDb) {
-		id = transactionDb.getId();
-		time = transactionDb.getTime();
-		typeOfTransaction = transactionDb.getTypeOfTransaction();
-		sendingBank = transactionDb.getSendingBank();
-		sendingAccount = transactionDb.getSendingAccount();
-		receivingBank = transactionDb.getReceivingBank();
-		receivingAccount = transactionDb.getReceivingAccount();
-		amount = transactionDb.getAmount();
-		currency = transactionDb.getCurrency();
-		status = transactionDb.getStatus();
 	}
 }

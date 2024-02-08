@@ -5,6 +5,8 @@ import com.project.banking.model.Transaction;
 import com.project.banking.model.TransactionCallback;
 import com.project.banking.model.TransactionIncoming;
 import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.model.database.TransactionCallbackDb;
+import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.TransactionsCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,14 +24,14 @@ public class TransactionsCallbackServiceImpl implements TransactionsCallbackServ
 	}
 
 	@Override
-	public void saveTransaction(TransactionCallback transaction) {
+	public void saveTransaction(TransactionCallbackDb transaction) {
 		transactionCallbackDAO.saveTransaction(transaction);
 	}
 
 	@Override
-	public TransactionCallback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming) {
+	public TransactionCallback fillAndSave(TransactionDb transaction, TransactionIncoming transactionIncoming) {
 		TransactionCallback transactionCallback = new TransactionCallback(transaction, transactionIncoming);
-		saveTransaction(transactionCallback);
+		saveTransaction(new TransactionCallbackDb(transactionCallback));
 		return transactionCallback;
 	}
 

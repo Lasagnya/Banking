@@ -3,29 +3,30 @@ package com.project.banking.service;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.model.*;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 
 import java.util.Optional;
 
 public interface TransactionsService {
-	Optional<Transaction> findById(int id);
+	Optional<TransactionDb> findById(int id);
 
-	Transaction saveTransaction(Transaction transaction);
+	TransactionDb saveTransaction(TransactionDb transaction);
 
-	Transaction update(Transaction transaction);
+	TransactionDb update(TransactionDb transaction);
 
-	Transaction fillAndSave(TransactionIncoming transactionIncoming);
+	TransactionDb fillAndSave(TransactionIncoming transactionIncoming);
 
-	Transaction updateTransactionStatus(Transaction transaction, TransactionStatus newStatus);
+	TransactionDb updateTransactionStatus(TransactionDb transaction, TransactionStatus newStatus);
 
-	Integer generateAndSaveCode(Transaction transaction);
+	Integer generateAndSaveCode(TransactionDb transaction);
 
 	void saveConfirmationCode(int id, Integer code);
 
-	Integer getConfirmationCode(Transaction transaction);
+	Integer getConfirmationCode(int id);
 
 	TransactionCallback createTransaction(TransactionIncoming transactionIncoming);
 
-	FinalisingTransactionResult finaliseTransaction(Transaction transaction);
+	FinalisingTransactionResult finaliseTransaction(TransactionDb transaction);
 
-	void sendExpiredTransaction(Transaction transaction);
+	void sendExpiredTransaction(TransactionDb transaction);
 }

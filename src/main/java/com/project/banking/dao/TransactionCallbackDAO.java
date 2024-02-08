@@ -3,6 +3,7 @@ package com.project.banking.dao;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.model.*;
+import com.project.banking.model.database.TransactionCallbackDb;
 import org.springframework.stereotype.Component;
 
 import java.io.FileReader;
@@ -46,7 +47,7 @@ public class TransactionCallbackDAO {
 		}
 	}
 
-	public void saveTransaction(TransactionCallback transaction) {
+	public void saveTransaction(TransactionCallbackDb transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 					"insert into transaction_callback(id, invoice_id, callback_uri) " +

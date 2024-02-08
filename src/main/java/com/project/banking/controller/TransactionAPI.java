@@ -2,6 +2,7 @@ package com.project.banking.controller;
 
 import com.project.banking.model.*;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.TransactionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,7 +24,7 @@ public class TransactionAPI {
 	}
 
 	@PostMapping(value = "/confirming")
-	public FinalisingTransactionResult finaliseTransaction(@RequestBody Transaction transaction) {						// посылает ответ на фронт B
+	public FinalisingTransactionResult finaliseTransaction(@RequestBody TransactionDb transaction) {						// посылает ответ на фронт B
 		return transactionsService.finaliseTransaction(transaction);
 	}
 }

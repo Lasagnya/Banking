@@ -9,6 +9,7 @@ import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.*;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.*;
 import com.project.banking.service.impl.TransactionsCallbackServiceImpl;
 import com.project.banking.service.impl.TransactionsServiceImpl;
@@ -79,7 +80,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void makeTransaction_succeed() throws Exception {
-		Transaction transaction = new Transaction(transactionIncoming);
+		TransactionDb transaction = new TransactionDb(transactionIncoming);
 		transaction.setId(0);
 		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(0);
 		Mockito.when(transactionDAO.saveTransaction(ArgumentMatchers.any())).thenReturn(transaction);
@@ -130,7 +131,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void makeTransaction_incorrectAmount() throws Exception {
-		Transaction transaction = new Transaction(transactionIncoming);
+		TransactionDb transaction = new TransactionDb(transactionIncoming);
 		transaction.setId(0);
 		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(1000);
 		Mockito.when(transactionDAO.saveTransaction(ArgumentMatchers.any())).thenReturn(transaction);
@@ -148,7 +149,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void finaliseTransaction_success() throws Exception {
-		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		TransactionDb transaction = new TransactionDb(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
 		TransactionCallback callback = new TransactionCallback(transaction, transactionIncoming);
 		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
 		Mockito.when(confirmationCode.verifyConfirmationCode(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(true);
@@ -169,7 +170,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void finaliseTransaction_Expired() throws Exception {
-		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.EXPIRED, 1);
+		TransactionDb transaction = new TransactionDb(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.EXPIRED, 1);
 		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
@@ -187,7 +188,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void finaliseTransaction_Invalid() throws Exception {
-		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.INVALID, 1);
+		TransactionDb transaction = new TransactionDb(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.INVALID, 1);
 		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
@@ -205,7 +206,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void finaliseTransaction_IncorrectCode() throws Exception {
-		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		TransactionDb transaction = new TransactionDb(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
 		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.of(transaction));
 		Mockito.when(confirmationCode.verifyConfirmationCode(ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn(false);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
@@ -224,7 +225,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void finaliseTransaction_IncorrectId() throws Exception {
-		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
+		TransactionDb transaction = new TransactionDb(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.PENDING, 1);
 		Mockito.when(transactionDAO.findById(transaction.getId())).thenReturn(Optional.empty());
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")

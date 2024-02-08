@@ -2,6 +2,7 @@ package com.project.banking.util;
 
 import com.project.banking.model.Transaction;
 import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.TransactionsService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class ExpiryFunctionality extends Thread {
 	private final TransactionsService transactionsService;
 	@Setter
-	private Transaction transaction;
+	private TransactionDb transaction;
 
 	@Autowired
 	public ExpiryFunctionality(TransactionsService transactionsService) {

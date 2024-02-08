@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
+import com.project.banking.model.database.TransactionCallbackDb;
+import com.project.banking.model.database.TransactionDb;
 import jakarta.persistence.Transient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,32 +29,24 @@ public class TransactionCallback {
 	private int invoiceId;
 
 	/** статус транзакции банкинга */
-	@Transient
-	@JsonInclude
 	private TransactionStatus status;
 
-	@Transient
 	private int sendingBank;
 
-	@Transient
 	private int receivingBank;
 
-	@Transient
 	private int sendingAccount;
 
-	@Transient
 	private int receivingAccount;
 
-	@Transient
 	private double amount;
 
-	@Transient
 	private Currency currency;
 
 	@JsonIgnore
 	private String callbackUri;
 
-	public TransactionCallback(Transaction transaction, TransactionIncoming transactionIncoming) {
+	public TransactionCallback(TransactionDb transaction, TransactionIncoming transactionIncoming) {
 		id = transaction.getId();
 		time = transaction.getTime();
 		invoiceId = transactionIncoming.getInvoiceId();
@@ -64,6 +58,10 @@ public class TransactionCallback {
 		amount = transaction.getAmount();
 		currency = transaction.getCurrency();
 		callbackUri = transactionIncoming.getCallbackUri();
+	}
+
+	public TransactionCallback(TransactionCallbackDb transactionCallbackDb) {
+
 	}
 
 	public static TransactionCallback generateInvalidCallback(TransactionIncoming transactionIncoming) {

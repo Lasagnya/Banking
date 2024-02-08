@@ -5,6 +5,7 @@ import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -78,7 +79,7 @@ public class AccountDAO {
 	 * Пополнение счёта
 	 * @param transaction исполняемая транзация
 	 */
-	public void payIn(Transaction transaction) {
+	public void payIn(TransactionDb transaction) {
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement("update account set balance=balance+? where account_id=?");
 			preparedStatement.setDouble(1, transaction.getAmount());
@@ -94,7 +95,7 @@ public class AccountDAO {
 	 * Снятие средств со счёта
 	 * @param transaction исполняемая транзакия
 	 */
-	public void withdrawal(Transaction transaction) {
+	public void withdrawal(TransactionDb transaction) {
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement("update account set balance=balance-? where account_id=?");
 			preparedStatement.setDouble(1, transaction.getAmount());
@@ -110,7 +111,7 @@ public class AccountDAO {
 	 * Перевод средств между счетами
 	 * @param transaction исполняемая транзакия
 	 */
-	public void transfer(Transaction transaction) {
+	public void transfer(TransactionDb transaction) {
 		if (transaction.getReceivingBank() != 1) {
 			ReentrantLock accountLock = accountLocks.computeIfAbsent(transaction.getSendingAccount(), k -> new ReentrantLock());
 			ReentrantLock bankLock = bankLocks.computeIfAbsent(transaction.getReceivingBank(), k -> new ReentrantLock());

@@ -4,6 +4,7 @@ import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.TransactionDb;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
@@ -53,8 +54,8 @@ public class TransactionDAO {
 		}
 	}
 
-	public Optional<Transaction> findById(int id) {
-		Transaction transaction = new Transaction();
+	public Optional<TransactionDb> findById(int id) {
+		TransactionDb transaction = new TransactionDb();
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement("select * from transaction where transaction_id=?");
 			preparedStatement.setInt(1, id);
@@ -83,7 +84,7 @@ public class TransactionDAO {
 	 * Сохранение транзакции в базу данных
 	 * @param transaction транзакция для сохранения
 	 */
-	public Transaction saveTransaction(Transaction transaction) {
+	public TransactionDb saveTransaction(TransactionDb transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 					"insert into transaction(execution_time, type_of_transaction, sending_bank, receiving_bank, sending_account, receiving_account, amount, transaction_currency, transaction_status, confirmation_code) " +
@@ -107,7 +108,7 @@ public class TransactionDAO {
 			else {
 				throw new SQLException("Creating transaction failed, no ID obtained.");
 			}
-			makeCheck(transaction);
+			makeCheck(new Transaction(transaction));
 		} catch (SQLException e) {
 			if (!e.getSQLState().equals("23505"))
 				throw new RuntimeException(e);
@@ -196,12 +197,12 @@ public class TransactionDAO {
 		}
 	}
 
-	public Integer getConfirmationCode(Transaction transaction) {
+	public Integer getConfirmationCode(int id) {
 		Integer code = null;
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"select confirmation_code from transaction where transaction_id=?");
-			preparedStatement.setInt(1, transaction.getId());
+			preparedStatement.setInt(1, id);
 			ResultSet rs = preparedStatement.executeQuery();
 			if (rs.next())
 				code = rs.getInt(1);
@@ -212,7 +213,7 @@ public class TransactionDAO {
 		return code;
 	}
 
-	public Transaction update(Transaction transaction) {
+	public TransactionDb update(TransactionDb transaction) {
 		try {
 			PreparedStatement preparedStatement1 = connection.prepareStatement(
 					"update transaction set execution_time = ?, type_of_transaction = ?, sending_bank = ?, receiving_bank = ?, sending_account = ?, " +
@@ -237,7 +238,7 @@ public class TransactionDAO {
 		return transaction;
 	}
 
-	public void updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
+	public void updateTransactionStatus(TransactionDb transaction, TransactionStatus newStatus) {
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(
 					"update transaction set transaction_status=? where transaction_id=?");
