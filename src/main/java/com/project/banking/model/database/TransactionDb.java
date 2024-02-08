@@ -4,6 +4,7 @@ import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.TransactionIncoming;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
@@ -14,36 +15,55 @@ import java.util.Date;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Entity
+@Table(name = "transaction")
 public class TransactionDb {
 	/** поле id */
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "transaction_id")
 	private int id;
 
 	/** поле время совершения транзации */
+	@Column(name = "execution_time")
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date time;
 
 	/** поле тип транзакии */
+	@Column(name = "type_of_transaction")
+	@Enumerated(EnumType.STRING)
 	private TypeOfTransaction typeOfTransaction;
 
 	/** поле бонк-отправитель */
+	@Column(name = "sending_bank")
 	private int sendingBank;
 
 	/** поле банк-получатель */
+	@Column(name = "receiving_bank")
 	private int receivingBank;
 
 	/** поле аккаунт-отправитель */
+	@Column(name = "sending_account")
 	private int sendingAccount;
 
 	/** поле аккаунт-получатель */
+	@Column(name = "receiving_account")
 	private int receivingAccount;
 
 	/** поле сумма транзакции */
+	@Column(name = "amount")
 	private double amount;
 
 	/** поле валюта транзации */
+	@Column(name = "transaction_currency")
+	@Enumerated(EnumType.STRING)
 	private Currency currency;
 
+	@Column(name = "transaction_status")
+	@Enumerated(EnumType.STRING)
 	private TransactionStatus status;
 
+	@Column(name = "confirmation_code")
 	private Integer confirmationCode = null;
 
 	/**

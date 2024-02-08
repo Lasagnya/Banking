@@ -1,13 +1,12 @@
 package com.project.banking.service.impl;
 
-import com.project.banking.dao.TransactionCallbackDAO;
-import com.project.banking.model.Transaction;
 import com.project.banking.model.TransactionCallback;
 import com.project.banking.model.TransactionIncoming;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.model.database.TransactionCallbackDb;
 import com.project.banking.model.database.TransactionDb;
-import com.project.banking.service.TransactionsCallbackService;
+import com.project.banking.repository.TransactionCallbackRepository;
+import com.project.banking.service.TransactionCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,17 +14,17 @@ import java.util.Date;
 import java.util.Optional;
 
 @Service
-public class TransactionsCallbackServiceImpl implements TransactionsCallbackService {
-	private final TransactionCallbackDAO transactionCallbackDAO;
+public class TransactionCallbackServiceImpl implements TransactionCallbackService {
+	private final TransactionCallbackRepository transactionCallbackRepository;
 
 	@Autowired
-	public TransactionsCallbackServiceImpl(TransactionCallbackDAO transactionCallbackDAO) {
-		this.transactionCallbackDAO = transactionCallbackDAO;
+	public TransactionCallbackServiceImpl(TransactionCallbackRepository transactionCallbackRepository) {
+		this.transactionCallbackRepository = transactionCallbackRepository;
 	}
 
 	@Override
 	public void saveTransaction(TransactionCallbackDb transaction) {
-		transactionCallbackDAO.saveTransaction(transaction);
+		transactionCallbackRepository.save(transaction);
 	}
 
 	@Override
@@ -37,7 +36,8 @@ public class TransactionsCallbackServiceImpl implements TransactionsCallbackServ
 
 	@Override
 	public Optional<TransactionCallback> findById(int id) {
-		return transactionCallbackDAO.findById(id);
+		Optional<TransactionCallbackDb> transactionCallbackDb = transactionCallbackRepository.findById(id);
+		return Optional.of(new TransactionCallback(transactionCallbackDb.get()));
 	}
 
 

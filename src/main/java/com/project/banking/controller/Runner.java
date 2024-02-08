@@ -1,16 +1,19 @@
 package com.project.banking.controller;
 
-import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.UserDAO;
+import com.project.banking.configuration.BeansConfig;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.database.Account;
-import com.project.banking.model.Transaction;
+import com.project.banking.model.database.Bank;
 import com.project.banking.model.database.TransactionDb;
+import com.project.banking.service.AccountService;
+import com.project.banking.service.UserService;
 import com.project.banking.util.ChargingOfPercents;
 import com.project.banking.util.IsPercentsNeeded;
 import com.project.banking.util.SwitchInputMethods;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,11 +27,18 @@ import java.util.concurrent.TimeUnit;
 /**
  *  Главный исполнительный файл с интерфейсом
  */
-
 public class Runner {
-	private static final AccountDAO accountDAO = new AccountDAO();
-	private static final UserDAO userDAO = new UserDAO();
+	private final ApplicationContext applicationContext = new AnnotationConfigApplicationContext(BeansConfig.class);;
+//	private static final AccountDAO accountDAO = new AccountDAO();
+//	private static final UserDAO userDAO = new UserDAO();
 	private static final SwitchInputMethods sim = new SwitchInputMethods();
+	private final AccountService accountDAO;
+	private final UserService userDAO;
+
+	{
+		accountDAO = applicationContext.getBean(AccountService.class);
+		userDAO = applicationContext.getBean(UserService.class);
+	}
 
 	public static void main(String[] args) {
 		long checkPeriod = ChronoUnit.MINUTES.getDuration().toMillis()/ (long)2;
@@ -40,13 +50,14 @@ public class Runner {
 		ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
 		scheduler2.scheduleAtFixedRate(new ChargingOfPercents(), chargingDelay, chargingPeriod, TimeUnit.MILLISECONDS);
 
-		run();
+		Runner runner = new Runner();
+		runner.run();
 
 		scheduler1.shutdown();
 		scheduler2.shutdown();
 	}
 
-	public static void run(){
+	public void run() {
 		Scanner scanner = new Scanner(System.in);
 
 		userDAO.authentication();
@@ -127,7 +138,7 @@ public class Runner {
 				}
 
 				case 5: {
-					accountDAO.save(new Account(Currency.BYN, new Date(), 1, UserDAO.getUser().getId()));
+					accountDAO.save(new Account(Currency.BYN, new Date(), new Bank(1), UserDAO.getUser()));
 					System.out.println("Счёт создан!");
 					break;
 				}

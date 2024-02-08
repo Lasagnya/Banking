@@ -8,11 +8,10 @@ import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.*;
-import com.project.banking.model.Transaction;
 import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.*;
-import com.project.banking.service.impl.TransactionsCallbackServiceImpl;
-import com.project.banking.service.impl.TransactionsServiceImpl;
+import com.project.banking.service.impl.TransactionCallbackServiceImpl;
+import com.project.banking.service.impl.TransactionServiceImpl;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
 import org.junit.jupiter.api.Test;
@@ -46,11 +45,11 @@ public class TransactionApiTest {
 	@Autowired
 	private ObjectMapper mapper;
 
-	@SpyBean(TransactionsServiceImpl.class)
-	private TransactionsService transactionsService;
+	@SpyBean(TransactionServiceImpl.class)
+	private TransactionService transactionService;
 
-	@SpyBean(TransactionsCallbackServiceImpl.class)
-	private TransactionsCallbackService transactionsCallbackService;
+	@SpyBean(TransactionCallbackServiceImpl.class)
+	private TransactionCallbackService transactionCallbackService;
 
 	@MockBean
 	private TransactionDAO transactionDAO;

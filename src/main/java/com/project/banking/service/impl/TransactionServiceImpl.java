@@ -1,66 +1,74 @@
 package com.project.banking.service.impl;
 
-import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.TransactionDAO;
 import com.project.banking.client.CallbackClient;
+import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.model.Transaction;
+import com.project.banking.model.database.Account;
 import com.project.banking.model.database.TransactionDb;
-import com.project.banking.service.TransactionsCallbackService;
-import com.project.banking.service.TransactionsService;
+import com.project.banking.repository.TransactionRepository;
+import com.project.banking.service.AccountService;
+import com.project.banking.service.TransactionCallbackService;
+import com.project.banking.service.TransactionService;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
 import com.project.banking.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Service
-public class TransactionsServiceImpl implements TransactionsService {
-	private final TransactionDAO transactionDAO;
+public class TransactionServiceImpl implements TransactionService {
+	private final TransactionRepository transactionRepository;
 	private ConfirmationCodeFunctionality confirmationCode;
-	private final TransactionsCallbackService transactionsCallbackService;
-	private final AccountDAO accountDAO;
+	private final TransactionCallbackService transactionCallbackService;
+	private final AccountService accountService;
 	private final CallbackClient callbackClient;
 	private final TransactionVerification transactionVerification;
 
 	@Autowired
-	public TransactionsServiceImpl(TransactionDAO transactionDAO, @Lazy ConfirmationCodeFunctionality confirmationCode, TransactionsCallbackService transactionsCallbackService, AccountDAO accountDAO, CallbackClient callbackClient, TransactionVerification transactionVerification) {
-		this.transactionDAO = transactionDAO;
+	public TransactionServiceImpl(TransactionRepository transactionRepository, @Lazy ConfirmationCodeFunctionality confirmationCode, TransactionCallbackService transactionCallbackService, AccountService accountService, CallbackClient callbackClient, TransactionVerification transactionVerification) {
+		this.transactionRepository = transactionRepository;
 		this.confirmationCode = confirmationCode;
-		this.transactionsCallbackService = transactionsCallbackService;
-		this.accountDAO = accountDAO;
+		this.transactionCallbackService = transactionCallbackService;
+		this.accountService = accountService;
 		this.callbackClient = callbackClient;
 		this.transactionVerification = transactionVerification;
 	}
 
 	@Override
 	public Optional<TransactionDb> findById(int id) {
-		return transactionDAO.findById(id);
+		return transactionRepository.findById(id);
 	}
 
 	@Override
 	public TransactionDb saveTransaction(TransactionDb transaction) {
-		return transactionDAO.saveTransaction(transaction);
+		return transactionRepository.save(transaction);
 	}
 
 	@Override
 	public TransactionDb update(TransactionDb transaction) {
-		return transactionDAO.update(transaction);
+		return transactionRepository.save(transaction);
 	}
 
 	@Override
 	public TransactionDb fillAndSave(TransactionIncoming transactionIncoming) {
 		TransactionDb transaction = new TransactionDb(transactionIncoming);
-		return transactionDAO.saveTransaction(transaction);
+		return saveTransaction(transaction);
 	}
 
 	@Override
 	public TransactionDb updateTransactionStatus(TransactionDb transaction, TransactionStatus newStatus) {
-		transactionDAO.updateTransactionStatus(transaction, newStatus);
 		transaction.setStatus(newStatus);
+		transactionRepository.save(transaction);
 		return transaction;
 	}
 
@@ -72,12 +80,15 @@ public class TransactionsServiceImpl implements TransactionsService {
 	}
 
 	@Override
+	@Transactional
 	public void saveConfirmationCode(int id, Integer code) {
-		transactionDAO.saveConfirmationCode(id, code);
+		Optional<TransactionDb> transactionDb = findById(id);
+		transactionDb.get().setConfirmationCode(code);
+		update(transactionDb.get());
 	}
 
 	public Integer getConfirmationCode(int id) {
-		return transactionDAO.getConfirmationCode(id);
+		return findById(id).map(TransactionDb::getConfirmationCode).orElse(null);
 	}
 
 	@Override
@@ -87,12 +98,12 @@ public class TransactionsServiceImpl implements TransactionsService {
 			TransactionDb transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
 			generateAndSaveCode(transaction);																				// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
+			return transactionCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
 			TransactionDb transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
 			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
-			return transactionsCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
+			return transactionCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
 		}
 		else {																												// Если ошибки с банком или счётом, то
 			return TransactionCallback.generateInvalidCallback(transactionIncoming);										// генерируем callback со статусом invalid
@@ -101,8 +112,20 @@ public class TransactionsServiceImpl implements TransactionsService {
 
 	@Override
 	public void sendExpiredTransaction(TransactionDb transaction) {
-		TransactionCallback transactionCallback = transactionsCallbackService.findById(transaction.getId()).get();
+		TransactionCallback transactionCallback = transactionCallbackService.findById(transaction.getId()).get();
 		callbackClient.sendTransaction(transactionCallback);
+	}
+
+	@Override
+	public List<TransactionDb> getTransactionsByAccountForPeriod(Account account, Period period) {
+		Date limit = Date.from(Instant.MIN);
+		if (period == Period.MONTH) {
+			limit = Date.from(LocalDate.now().minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		}
+		else if (period == Period.YEAR) {
+			limit = Date.from(LocalDate.now().minusYears(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		}
+		return transactionRepository.getTransactionsByAccountForPeriod(account.getId(), limit);
 	}
 
 	@Override
@@ -114,9 +137,9 @@ public class TransactionsServiceImpl implements TransactionsService {
 			}
 			if (optionalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
 				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
-					accountDAO.transfer(optionalTransaction.get());															// при корректности переводим средства
+					accountService.transfer(optionalTransaction.get());															// при корректности переводим средства
 					transaction = updateTransactionStatus(transaction, TransactionStatus.PAID);								// обновляем статус на PAID
-					TransactionCallback transactionCallback = transactionsCallbackService.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
+					TransactionCallback transactionCallback = transactionCallbackService.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
 					callbackClient.sendTransaction(transactionCallback);
 					return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(0));
 				} else {
