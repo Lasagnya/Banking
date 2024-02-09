@@ -1,11 +1,11 @@
 package com.project.banking.util;
 
-import com.project.banking.dao.UserDAO;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.TransactionService;
+import com.project.banking.service.UserService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -30,10 +30,12 @@ import java.util.List;
 @Component
 public class DocumentsFunctionality {
 	private final TransactionService transactionService;
+	private final UserService userService;
 
 	@Autowired
-	public DocumentsFunctionality(TransactionService transactionService) {
+	public DocumentsFunctionality(TransactionService transactionService, UserService userService) {
 		this.transactionService = transactionService;
+		this.userService = userService;
 	}
 
 	/**
@@ -53,7 +55,7 @@ public class DocumentsFunctionality {
 			bw.write(output);
 			output = String.format("%28s%28s\n", "#", "").replace("#", "Clever-Bank");
 			bw.write(output);
-			bw.write(String.format(" %-26s| %-37s\n", "Клиент", UserDAO.getUser().getName()));
+			bw.write(String.format(" %-26s| %-37s\n", "Клиент", userService.getUser().getName()));
 			bw.write(String.format(" %-26s| %-37s\n", "Счёт", account.getId()));
 			bw.write(String.format(" %-26s| %-37s\n", "Валюта", account.getCurrency().toString()));
 			DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyy");
@@ -120,7 +122,7 @@ public class DocumentsFunctionality {
 			output = String.format("%28s%28s", "#", "").replace("#", "Clever-Bank");
 			contentStream.showText(output);
 			contentStream.newLine();
-			contentStream.showText(String.format(" %-26s| %-37s", "Клиент", UserDAO.getUser().getName()));
+			contentStream.showText(String.format(" %-26s| %-37s", "Клиент", userService.getUser().getName()));
 			contentStream.newLine();
 			contentStream.showText(String.format(" %-26s| %-37s", "Счёт", account.getId()));
 			contentStream.newLine();

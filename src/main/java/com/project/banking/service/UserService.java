@@ -26,6 +26,8 @@ public interface UserService {
 	 */
 	void authentication();
 
+	User getUser();
+
 	/**
 	 * Обновление записи о пользователе в базе данных.
 	 *

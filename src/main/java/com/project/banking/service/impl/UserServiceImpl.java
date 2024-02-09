@@ -16,7 +16,7 @@ import java.util.Scanner;
 @Service
 public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
-	private User user;
+	private static User user;
 
 	@Autowired
 	public UserServiceImpl(UserRepository userRepository) {
@@ -24,9 +24,10 @@ public class UserServiceImpl implements UserService {
 	}
 
 	private void defineUser(User user) {
-		this.user = user;
+		UserServiceImpl.user = user;
 	}
 
+	@Override
 	public User getUser() {
 		return user;
 	}

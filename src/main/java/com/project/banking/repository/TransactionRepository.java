@@ -1,7 +1,5 @@
 package com.project.banking.repository;
 
-import com.project.banking.enumeration.Period;
-import com.project.banking.model.database.Account;
 import com.project.banking.model.database.TransactionDb;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

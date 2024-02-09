@@ -1,7 +1,6 @@
 package com.project.banking.service.impl;
 
 import com.project.banking.enumeration.Period;
-import com.project.banking.model.Transaction;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.database.TransactionDb;
 import com.project.banking.repository.AccountRepository;
@@ -46,6 +45,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	@Transactional
 	public void transfer(TransactionDb transaction) {
 		if (transaction.getReceivingBank() != 1) {
 			ReentrantLock accountLock = accountLocks.computeIfAbsent(transaction.getSendingAccount(), k -> new ReentrantLock());

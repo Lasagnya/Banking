@@ -1,6 +1,6 @@
 package com.project.banking.controller;
 
-import com.project.banking.configuration.BeansConfig;
+import com.project.banking.configuration.ConsoleApplicationConfig;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
@@ -28,29 +28,30 @@ import java.util.concurrent.TimeUnit;
  *  Главный исполнительный файл с интерфейсом
  */
 public class Runner {
-	private final ApplicationContext applicationContext = new AnnotationConfigApplicationContext(BeansConfig.class);;
-//	private static final AccountDAO accountDAO = new AccountDAO();
-//	private static final UserDAO userDAO = new UserDAO();
-	private static final SwitchInputMethods sim = new SwitchInputMethods();
-	private final AccountService accountDAO;
-	private final UserService userDAO;
+	private final ApplicationContext applicationContext = new AnnotationConfigApplicationContext(ConsoleApplicationConfig.class);
+	private final SwitchInputMethods sim;
+	private final AccountService accountService;
+	private final UserService userService;
+	private final IsPercentsNeeded isPercentsNeeded;
 
 	{
-		accountDAO = applicationContext.getBean(AccountService.class);
-		userDAO = applicationContext.getBean(UserService.class);
+		accountService = applicationContext.getBean(AccountService.class);
+		userService = applicationContext.getBean(UserService.class);
+		sim = applicationContext.getBean(SwitchInputMethods.class);
+		isPercentsNeeded = applicationContext.getBean(IsPercentsNeeded.class);
 	}
 
 	public static void main(String[] args) {
+		Runner runner = new Runner();
 		long checkPeriod = ChronoUnit.MINUTES.getDuration().toMillis()/ (long)2;
 		ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
-		scheduler1.scheduleAtFixedRate(new IsPercentsNeeded(), 0, checkPeriod, TimeUnit.MILLISECONDS);
+		scheduler1.scheduleAtFixedRate(runner.isPercentsNeeded, 0, checkPeriod, TimeUnit.MILLISECONDS);
 		long chargingPeriod = ChronoUnit.MONTHS.getDuration().toMillis();
 		LocalDateTime month = LocalDateTime.now().plusMonths(1).withDayOfMonth(1).with(LocalTime.MIN);
 		long chargingDelay = ChronoUnit.MILLIS.between(LocalDateTime.now(), month);
 		ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
 		scheduler2.scheduleAtFixedRate(new ChargingOfPercents(), chargingDelay, chargingPeriod, TimeUnit.MILLISECONDS);
 
-		Runner runner = new Runner();
 		runner.run();
 
 		scheduler1.shutdown();
@@ -60,7 +61,7 @@ public class Runner {
 	public void run() {
 		Scanner scanner = new Scanner(System.in);
 
-		userDAO.authentication();
+		userService.authentication();
 
 		loop:
 		while(true) {
@@ -88,7 +89,7 @@ public class Runner {
 					double amount = sim.getAmount(sendingAccount);
 
 					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.TRANSFER, 1, receivingBank, sendingAccount.getId(), receivingAccount, amount, Currency.BYN);
-					accountDAO.transfer(transaction);
+					accountService.transfer(transaction);
 					break;
 				}
 
@@ -99,7 +100,7 @@ public class Runner {
 					double amount = sim.getAmount(sendingAccount);
 
 					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.WITHDRAWAL, 1, 1, sendingAccount.getId(), sendingAccount.getId(), amount, Currency.BYN);
-					accountDAO.withdrawal(transaction);
+					accountService.withdrawal(transaction);
 					break;
 				}
 
@@ -112,7 +113,7 @@ public class Runner {
 					double amount = scanner.nextDouble();
 
 					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.PAYIN, 1, receivingBank, 1, receivingAccount, amount, Currency.BYN);
-					accountDAO.payIn(transaction);
+					accountService.payIn(transaction);
 					break;
 				}
 
@@ -131,14 +132,14 @@ public class Runner {
 								2: pdf""");
 					int file = sim.getFileFormat();
 					if (file == 1)
-						accountDAO.excerpt(account, period);
+						accountService.excerpt(account, period);
 					else if (file == 2)
-						accountDAO.excerptInPDF(account, period);
+						accountService.excerptInPDF(account, period);
 					break;
 				}
 
 				case 5: {
-					accountDAO.save(new Account(Currency.BYN, new Date(), new Bank(1), UserDAO.getUser()));
+					accountService.save(new Account(Currency.BYN, new Date(), new Bank(1), userService.getUser()));
 					System.out.println("Счёт создан!");
 					break;
 				}
@@ -150,9 +151,9 @@ public class Runner {
 								2: имя""");
 					int value = sim.getFileFormat();
 					if (value == 1)
-						userDAO.changePassword();
+						userService.changePassword();
 					else if (value == 2)
-						userDAO.changeUsername();
+						userService.changeUsername();
 					break;
 				}
 

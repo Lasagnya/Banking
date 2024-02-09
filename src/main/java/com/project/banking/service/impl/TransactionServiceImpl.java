@@ -3,7 +3,6 @@ package com.project.banking.service.impl;
 import com.project.banking.client.CallbackClient;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TransactionStatus;
-import com.project.banking.model.Transaction;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.database.TransactionDb;
 import com.project.banking.repository.TransactionRepository;
@@ -16,7 +15,6 @@ import com.project.banking.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -80,11 +78,12 @@ public class TransactionServiceImpl implements TransactionService {
 	}
 
 	@Override
-	@Transactional
 	public void saveConfirmationCode(int id, Integer code) {
 		Optional<TransactionDb> transactionDb = findById(id);
-		transactionDb.get().setConfirmationCode(code);
-		update(transactionDb.get());
+		if (transactionDb.isPresent()) {
+			transactionDb.get().setConfirmationCode(code);
+			update(transactionDb.get());
+		}
 	}
 
 	public Integer getConfirmationCode(int id) {

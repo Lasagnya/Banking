@@ -1,21 +1,21 @@
 package com.project.banking.util;
 
-import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.BankDAO;
 import com.project.banking.model.database.Account;
 import com.project.banking.model.TransactionIncoming;
+import com.project.banking.service.AccountService;
+import com.project.banking.service.BankService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionVerification {
-	private final BankDAO bankDAO;
-	private final AccountDAO accountDAO;
+	private final BankService bankService;
+	private final AccountService accountService;
 
 	@Autowired
-	public TransactionVerification(BankDAO bankDAO, AccountDAO accountDAO) {
-		this.bankDAO = bankDAO;
-		this.accountDAO = accountDAO;
+	public TransactionVerification(BankService bankService, AccountService accountService) {
+		this.bankService = bankService;
+		this.accountService = accountService;
 	}
 
 	/**
@@ -29,24 +29,24 @@ public class TransactionVerification {
 				isReceivingAccountCorrect(transaction.getReceivingAccount()) +
 				isSendingAccountCorrect(transaction.getSendingAccount());
 		if (errors == 0)
-			errors += isAmountCorrect(accountDAO.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
+			errors += isAmountCorrect(accountService.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
 		return errors;
 	}
 
 	private int isBankCorrect(int id) {
-		if (bankDAO.findById(id).isPresent())
+		if (bankService.findById(id).isPresent())
 			return 0;
 		else return 1 * 1;
 	}
 
 	private int isReceivingAccountCorrect(int id) {
-		if (accountDAO.findById(id).isPresent())
+		if (accountService.findById(id).isPresent())
 			return 0;
 		else return 1 * 10;
 	}
 
 	private int isSendingAccountCorrect(int id) {
-		if (accountDAO.findById(id).isPresent())
+		if (accountService.findById(id).isPresent())
 			return 0;
 		else return 1 * 100;
 	}

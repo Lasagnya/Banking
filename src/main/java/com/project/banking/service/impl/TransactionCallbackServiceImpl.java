@@ -37,7 +37,7 @@ public class TransactionCallbackServiceImpl implements TransactionCallbackServic
 	@Override
 	public Optional<TransactionCallback> findById(int id) {
 		Optional<TransactionCallbackDb> transactionCallbackDb = transactionCallbackRepository.findById(id);
-		return Optional.of(new TransactionCallback(transactionCallbackDb.get()));
+		return transactionCallbackDb.map(TransactionCallback::new);
 	}
 
 
