@@ -75,4 +75,5 @@ public interface AccountService {
 	 */
 	void excerptInPDF(Account account, Period period);
 
+	void chargePercents();
 }

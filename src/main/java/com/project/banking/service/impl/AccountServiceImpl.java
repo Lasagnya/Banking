@@ -7,11 +7,14 @@ import com.project.banking.repository.AccountRepository;
 import com.project.banking.service.AccountService;
 import com.project.banking.util.DocumentsFunctionality;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -25,11 +28,13 @@ public class AccountServiceImpl implements AccountService {
 	private final ConcurrentMap<Integer, ReentrantLock> accountLocks = new ConcurrentHashMap<>();
 	/** мэп, сопоставляющий id банка с ReentrantLock */
 	private final ConcurrentMap<Integer, ReentrantLock> bankLocks = new ConcurrentHashMap<>();
+	private final Environment env;
 
 	@Autowired
-	public AccountServiceImpl(AccountRepository accountRepository, @Lazy DocumentsFunctionality documentsFunctionality) {
+	public AccountServiceImpl(AccountRepository accountRepository, @Lazy DocumentsFunctionality documentsFunctionality, Environment env) {
 		this.accountRepository = accountRepository;
 		this.documentsFunctionality = documentsFunctionality;
+		this.env = env;
 	}
 
 	@Override
@@ -120,5 +125,10 @@ public class AccountServiceImpl implements AccountService {
 	@Override
 	public void excerptInPDF(Account account, Period period) {
 		documentsFunctionality.excerptInPDF(account,period);
+	}
+
+	@Override
+	public void chargePercents() {
+		accountRepository.chargePercents(Double.valueOf(Objects.requireNonNull(env.getProperty("percent"))));
 	}
 }

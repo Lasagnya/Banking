@@ -1,6 +1,5 @@
 package com.project.banking.controller;
 
-import com.project.banking.configuration.ConsoleApplicationConfig;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
@@ -9,53 +8,28 @@ import com.project.banking.model.database.Bank;
 import com.project.banking.model.database.TransactionDb;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.UserService;
-import com.project.banking.util.ChargingOfPercents;
 import com.project.banking.util.IsPercentsNeeded;
 import com.project.banking.util.SwitchInputMethods;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Scanner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  *  Главный исполнительный файл с интерфейсом
  */
+@Component
 public class Runner {
-	private final ApplicationContext applicationContext = new AnnotationConfigApplicationContext(ConsoleApplicationConfig.class);
 	private final SwitchInputMethods sim;
 	private final AccountService accountService;
 	private final UserService userService;
-	private final IsPercentsNeeded isPercentsNeeded;
 
-	{
-		accountService = applicationContext.getBean(AccountService.class);
-		userService = applicationContext.getBean(UserService.class);
-		sim = applicationContext.getBean(SwitchInputMethods.class);
-		isPercentsNeeded = applicationContext.getBean(IsPercentsNeeded.class);
-	}
-
-	public static void main(String[] args) {
-		Runner runner = new Runner();
-		long checkPeriod = ChronoUnit.MINUTES.getDuration().toMillis()/ (long)2;
-		ScheduledExecutorService scheduler1 = Executors.newScheduledThreadPool(1);
-		scheduler1.scheduleAtFixedRate(runner.isPercentsNeeded, 0, checkPeriod, TimeUnit.MILLISECONDS);
-		long chargingPeriod = ChronoUnit.MONTHS.getDuration().toMillis();
-		LocalDateTime month = LocalDateTime.now().plusMonths(1).withDayOfMonth(1).with(LocalTime.MIN);
-		long chargingDelay = ChronoUnit.MILLIS.between(LocalDateTime.now(), month);
-		ScheduledExecutorService scheduler2 = Executors.newScheduledThreadPool(1);
-		scheduler2.scheduleAtFixedRate(new ChargingOfPercents(), chargingDelay, chargingPeriod, TimeUnit.MILLISECONDS);
-
-		runner.run();
-
-		scheduler1.shutdown();
-		scheduler2.shutdown();
+	@Autowired
+	public Runner(SwitchInputMethods sim, AccountService accountService, UserService userService) {
+		this.sim = sim;
+		this.accountService = accountService;
+		this.userService = userService;
 	}
 
 	public void run() {

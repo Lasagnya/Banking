@@ -17,7 +17,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "Account")
+@Table(name = "account")
 public class Account {
 	/** поле id */
 	@Id
@@ -40,12 +40,12 @@ public class Account {
 
 	/** поле id банка */
 	@ManyToOne
-	@JoinColumn(name = "account_bank_id", referencedColumnName = "bank_id")
+	@JoinColumn(name = "account_bank_id")
 	private Bank bank;
 
 	/** поле id пользователя */
 	@ManyToOne
-	@JoinColumn(name = "account_user_id", referencedColumnName = "user_id")
+	@JoinColumn(name = "account_user_id")
 	private User user;
 
 	/** поле нужно ли начислять проценты */

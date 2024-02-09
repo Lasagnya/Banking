@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "user")
+@Table(name = "my_user")
 public class User {
 	/** id пользователя */
 	@Id
@@ -31,7 +31,7 @@ public class User {
 
 	/** id банка-владельца */
 	@ManyToOne
-	@JoinColumn(name = "user_bank_id", referencedColumnName = "bank_id")
+	@JoinColumn(name = "user_bank_id")
 	private Bank bank;
 
 	@OneToMany(mappedBy = "user")
