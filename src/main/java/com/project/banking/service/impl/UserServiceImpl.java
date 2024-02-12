@@ -1,6 +1,6 @@
 package com.project.banking.service.impl;
 
-import com.project.banking.model.database.User;
+import com.project.banking.domain.User;
 import com.project.banking.repository.UserRepository;
 import com.project.banking.service.UserService;
 import de.mkammerer.argon2.Argon2;

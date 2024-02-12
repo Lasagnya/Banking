@@ -1,16 +1,14 @@
 package com.project.banking.service.impl;
 
-import com.project.banking.model.TransactionCallback;
-import com.project.banking.model.TransactionIncoming;
-import com.project.banking.enumeration.TransactionStatus;
-import com.project.banking.model.database.TransactionCallbackDb;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.to.client.Callback;
+import com.project.banking.to.client.TransactionIncoming;
+import com.project.banking.domain.ClientInformation;
+import com.project.banking.domain.Transaction;
 import com.project.banking.repository.TransactionCallbackRepository;
 import com.project.banking.service.TransactionCallbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -23,37 +21,29 @@ public class TransactionCallbackServiceImpl implements TransactionCallbackServic
 	}
 
 	@Override
-	public void saveTransaction(TransactionCallbackDb transaction) {
+	public void saveTransaction(ClientInformation transaction) {
 		transactionCallbackRepository.save(transaction);
 	}
 
 	@Override
-	public TransactionCallback fillAndSave(TransactionDb transaction, TransactionIncoming transactionIncoming) {
-		TransactionCallback transactionCallback = new TransactionCallback(transaction, transactionIncoming);
-		saveTransaction(new TransactionCallbackDb(transactionCallback));
-		return transactionCallback;
+	public Callback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming) {
+		Callback callback = new Callback(transaction, transactionIncoming);
+		saveTransaction(new ClientInformation(callback));
+		return callback;
 	}
 
 	@Override
-	public Optional<TransactionCallback> findById(int id) {
-		Optional<TransactionCallbackDb> transactionCallbackDb = transactionCallbackRepository.findById(id);
-		return transactionCallbackDb.map(TransactionCallback::new);
+	public Optional<Callback> findById(int id) {
+		Optional<ClientInformation> transactionCallbackDb = transactionCallbackRepository.findById(id);
+//		transactionCallbackDb.ifPresent(callbackDb -> Hibernate.initialize(callbackDb.getTransaction()));
+		return transactionCallbackDb.map(callbackDb -> new Callback(callbackDb.getTransaction(), callbackDb));
 	}
 
-
-	public TransactionCallback generateInvalidCallback(TransactionIncoming transactionIncoming) {
-		TransactionCallback transactionCallback = new TransactionCallback();
-		transactionCallback.setId(0);
-		transactionCallback.setTime(new Date());
-		transactionCallback.setInvoiceId(transactionIncoming.getInvoiceId());
-		transactionCallback.setStatus(TransactionStatus.INVALID);
-		transactionCallback.setSendingBank(0);
-		transactionCallback.setReceivingBank(transactionIncoming.getReceivingBank());
-		transactionCallback.setSendingAccount(transactionIncoming.getSendingAccount());
-		transactionCallback.setReceivingAccount(transactionIncoming.getReceivingAccount());
-		transactionCallback.setAmount(transactionIncoming.getAmount());
-		transactionCallback.setCurrency(transactionIncoming.getCurrency());
-		transactionCallback.setCallbackUri(transactionIncoming.getCallbackUri());
-		return transactionCallback;
+	@Override
+	public Optional<Callback> findByTransactionId(int id) {
+//		return transactionCallbackRepository.findByTransactionId(id);
+		Optional<ClientInformation> transactionCallbackDb = transactionCallbackRepository.findByTransactionId(id);
+//		transactionCallbackDb.ifPresent(callbackDb -> Hibernate.initialize(callbackDb.getTransaction()));
+		return transactionCallbackDb.map(callbackDb -> new Callback(callbackDb.getTransaction(), callbackDb));
 	}
 }

@@ -1,7 +1,7 @@
 package com.project.banking.util;
 
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.Bank;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Bank;
 import com.project.banking.enumeration.Period;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.BankService;

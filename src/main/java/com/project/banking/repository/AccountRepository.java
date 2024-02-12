@@ -1,7 +1,6 @@
 package com.project.banking.repository;
 
-import com.project.banking.model.database.Account;
-import org.springframework.beans.factory.annotation.Value;
+import com.project.banking.domain.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -1,8 +1,8 @@
 package com.project.banking.service;
 
 import com.project.banking.enumeration.Period;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Transaction;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,19 +12,19 @@ public interface AccountService {
 	 * Пополнение счёта
 	 * @param transaction исполняемая транзация
 	 */
-	void payIn(TransactionDb transaction);
+	void payIn(Transaction transaction);
 
 	/**
 	 * Снятие средств со счёта
 	 * @param transaction исполняемая транзакия
 	 */
-	void withdrawal(TransactionDb transaction);
+	void withdrawal(Transaction transaction);
 
 	/**
 	 * Перевод средств между счетами
 	 * @param transaction исполняемая транзакия
 	 */
-	void transfer(TransactionDb transaction);
+	void transfer(Transaction transaction);
 
 	/**
 	 * Получение сущности счёт

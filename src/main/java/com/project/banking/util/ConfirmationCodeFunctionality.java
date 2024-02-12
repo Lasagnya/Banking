@@ -1,6 +1,6 @@
 package com.project.banking.util;
 
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,16 +15,16 @@ public class ConfirmationCodeFunctionality {
 		this.expiryFunctionality = expiryFunctionality;
 	}
 
-	public Integer generateConfirmationCode(TransactionDb transaction) {
+	public Integer generateConfirmationCode(Transaction transaction) {
 		Random random = new Random();
 		return random.nextInt(10);
 	}
 
-	public boolean verifyConfirmationCode(TransactionDb receivedTransaction, Integer referenceCode) {
+	public boolean verifyConfirmationCode(Transaction receivedTransaction, Integer referenceCode) {
 		return receivedTransaction.getConfirmationCode().equals(referenceCode);
 	}
 
-	public void expiryTimer(TransactionDb transaction) {
+	public void expiryTimer(Transaction transaction) {
 		expiryFunctionality.setTransaction(transaction);
 		expiryFunctionality.start();
 	}

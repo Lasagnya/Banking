@@ -1,7 +1,7 @@
 package com.project.banking.util;
 
-import com.project.banking.model.database.Account;
-import com.project.banking.model.TransactionIncoming;
+import com.project.banking.domain.Account;
+import com.project.banking.to.client.TransactionIncoming;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.BankService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class TransactionVerification {
 	 * 			is receivingBank, the second is receivingAccount, the third
 	 * 			is sendingAccount, the forth is amount of transaction.
 	 * */
-	public int verify(TransactionIncoming transaction) {
+	public int verify(TransactionIncoming transaction) {																	// TODO по идее, так возвращать не очень красиво
 		int errors = isBankCorrect(transaction.getReceivingBank()) +
 				isReceivingAccountCorrect(transaction.getReceivingAccount()) +
 				isSendingAccountCorrect(transaction.getSendingAccount());

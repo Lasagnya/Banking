@@ -1,7 +1,7 @@
 package com.project.banking.util;
 
 import com.project.banking.enumeration.TransactionStatus;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Transaction;
 import com.project.banking.service.TransactionService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class ExpiryFunctionality extends Thread {
 	private final TransactionService transactionService;
 	@Setter
-	private TransactionDb transaction;
+	private Transaction transaction;
 
 	@Autowired
 	public ExpiryFunctionality(TransactionService transactionService) {
@@ -28,8 +28,8 @@ public class ExpiryFunctionality extends Thread {
 			throw new RuntimeException(e);
 		}
 		transaction = transactionService.findById(transaction.getId()).get();
-		if (transaction.getStatus() != TransactionStatus.PAID) {
-			transactionService.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
+		if (transaction.getStatus() == TransactionStatus.PENDING || transaction.getStatus() == TransactionStatus.NEW) {
+			transaction = transactionService.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
 			transactionService.sendExpiredTransaction(transaction);
 		}
 	}

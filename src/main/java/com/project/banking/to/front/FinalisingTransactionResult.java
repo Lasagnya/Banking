@@ -1,4 +1,4 @@
-package com.project.banking.model;
+package com.project.banking.to.front;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FinalisingTransactionResult {
-	private Transaction transaction;
+	private OngoingTransaction ongoingTransaction;
 	private ApiError apiError;
 }

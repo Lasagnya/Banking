@@ -1,4 +1,4 @@
-package com.project.banking.model.database;
+package com.project.banking.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;

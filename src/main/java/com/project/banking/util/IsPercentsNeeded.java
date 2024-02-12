@@ -1,6 +1,6 @@
 package com.project.banking.util;
 
-import com.project.banking.model.database.Account;
+import com.project.banking.domain.Account;
 import com.project.banking.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

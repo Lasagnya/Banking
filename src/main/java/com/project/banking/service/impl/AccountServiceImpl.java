@@ -1,13 +1,12 @@
 package com.project.banking.service.impl;
 
 import com.project.banking.enumeration.Period;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Transaction;
 import com.project.banking.repository.AccountRepository;
 import com.project.banking.service.AccountService;
 import com.project.banking.util.DocumentsFunctionality;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -39,19 +38,19 @@ public class AccountServiceImpl implements AccountService {
 
 	@Override
 	@Transactional
-	public void payIn(final TransactionDb transaction) {
+	public void payIn(final Transaction transaction) {
 		findById(transaction.getReceivingBank()).ifPresent(account -> account.setBalance(account.getBalance() + transaction.getAmount()));
 	}
 
 	@Override
 	@Transactional
-	public void withdrawal(TransactionDb transaction) {
+	public void withdrawal(Transaction transaction) {
 		findById(transaction.getSendingBank()).ifPresent(account -> account.setBalance(account.getBalance() - transaction.getAmount()));
 	}
 
 	@Override
 	@Transactional
-	public void transfer(TransactionDb transaction) {
+	public void transfer(Transaction transaction) {
 		if (transaction.getReceivingBank() != 1) {
 			ReentrantLock accountLock = accountLocks.computeIfAbsent(transaction.getSendingAccount(), k -> new ReentrantLock());
 			ReentrantLock bankLock = bankLocks.computeIfAbsent(transaction.getReceivingBank(), k -> new ReentrantLock());

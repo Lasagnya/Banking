@@ -1,6 +1,6 @@
 package com.project.banking.service.impl;
 
-import com.project.banking.model.database.Bank;
+import com.project.banking.domain.Bank;
 import com.project.banking.repository.BankRepository;
 import com.project.banking.service.BankService;
 import org.springframework.beans.factory.annotation.Autowired;

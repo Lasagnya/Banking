@@ -1,13 +1,17 @@
-package com.project.banking.model.database;
+package com.project.banking.to.front;
 
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
-import com.project.banking.model.TransactionIncoming;
-import jakarta.persistence.*;
+import com.project.banking.domain.Transaction;
+import com.project.banking.to.client.TransactionIncoming;
 import lombok.*;
 
 import java.util.Date;
+
+/**
+ *  Класс транзакций
+ */
 
 @Getter
 @Setter
@@ -15,56 +19,35 @@ import java.util.Date;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@Entity
-@Table(name = "transaction")
-public class TransactionDb {
+public class OngoingTransaction {
 	/** поле id */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "transaction_id")
 	private int id;
 
 	/** поле время совершения транзации */
-	@Column(name = "execution_time")
-	@Temporal(TemporalType.TIMESTAMP)
 	private Date time;
 
 	/** поле тип транзакии */
-	@Column(name = "type_of_transaction")
-	@Enumerated(EnumType.STRING)
 	private TypeOfTransaction typeOfTransaction;
 
 	/** поле бонк-отправитель */
-	@Column(name = "sending_bank")
 	private int sendingBank;
 
 	/** поле банк-получатель */
-	@Column(name = "receiving_bank")
 	private int receivingBank;
 
 	/** поле аккаунт-отправитель */
-	@Column(name = "sending_account")
 	private int sendingAccount;
 
 	/** поле аккаунт-получатель */
-	@Column(name = "receiving_account")
 	private int receivingAccount;
 
 	/** поле сумма транзакции */
-	@Column(name = "amount")
 	private double amount;
 
 	/** поле валюта транзации */
-	@Column(name = "transaction_currency")
-	@Enumerated(EnumType.STRING)
 	private Currency currency;
 
-	@Column(name = "transaction_status")
-	@Enumerated(EnumType.STRING)
 	private TransactionStatus status;
-
-	@Column(name = "confirmation_code")
-	private Integer confirmationCode = null;
 
 	/**
 	 *
@@ -77,7 +60,7 @@ public class TransactionDb {
 	 * @param amount сумма транзации
 	 * @param currency валюта транзакции
 	 */
-	public TransactionDb(Date time, TypeOfTransaction typeOfTransaction, int sendingBank, int receivingBank, int sendingAccount, int receivingAccount, double amount, Currency currency) {
+	public OngoingTransaction(Date time, TypeOfTransaction typeOfTransaction, int sendingBank, int receivingBank, int sendingAccount, int receivingAccount, double amount, Currency currency) {
 		this.time = time;
 		this.typeOfTransaction = typeOfTransaction;
 		this.sendingBank = sendingBank;
@@ -88,7 +71,7 @@ public class TransactionDb {
 		this.currency = currency;
 	}
 
-	public TransactionDb(TransactionIncoming transactionIncoming) {
+	public OngoingTransaction(TransactionIncoming transactionIncoming) {
 		time = new Date();
 		typeOfTransaction = TypeOfTransaction.TRANSFER;
 		receivingBank = transactionIncoming.getReceivingBank();
@@ -98,5 +81,18 @@ public class TransactionDb {
 		amount = transactionIncoming.getAmount();
 		currency = transactionIncoming.getCurrency();
 		status = TransactionStatus.PENDING;
+	}
+
+	public OngoingTransaction(Transaction transaction) {
+		id = transaction.getId();
+		time = transaction.getTime();
+		typeOfTransaction = transaction.getTypeOfTransaction();
+		sendingBank = transaction.getSendingBank();
+		sendingAccount = transaction.getSendingAccount();
+		receivingBank = transaction.getReceivingBank();
+		receivingAccount = transaction.getReceivingAccount();
+		amount = transaction.getAmount();
+		currency = transaction.getCurrency();
+		status = transaction.getStatus();
 	}
 }

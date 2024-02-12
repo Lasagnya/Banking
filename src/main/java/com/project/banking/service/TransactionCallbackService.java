@@ -1,16 +1,18 @@
 package com.project.banking.service;
 
-import com.project.banking.model.TransactionCallback;
-import com.project.banking.model.TransactionIncoming;
-import com.project.banking.model.database.TransactionCallbackDb;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.to.client.Callback;
+import com.project.banking.to.client.TransactionIncoming;
+import com.project.banking.domain.ClientInformation;
+import com.project.banking.domain.Transaction;
 
 import java.util.Optional;
 
 public interface TransactionCallbackService {
-	void saveTransaction(TransactionCallbackDb transaction);
+	void saveTransaction(ClientInformation transaction);
 
-	TransactionCallback fillAndSave(TransactionDb transaction, TransactionIncoming transactionIncoming);
+	Callback fillAndSave(Transaction transaction, TransactionIncoming transactionIncoming);
 
-	Optional<TransactionCallback> findById(int id);
+	Optional<Callback> findById(int id);
+
+	Optional<Callback> findByTransactionId(int id);
 }

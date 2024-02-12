@@ -2,8 +2,8 @@ package com.project.banking.util;
 
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Transaction;
 import com.project.banking.service.TransactionService;
 import com.project.banking.service.UserService;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -44,7 +44,7 @@ public class DocumentsFunctionality {
 	 * @param period выписка по этому периоду
 	 */
 	public void excerpt(Account account, Period period) {
-		List<TransactionDb> transactions = transactionService.getTransactionsByAccountForPeriod(account, period);
+		List<Transaction> transactions = transactionService.getTransactionsByAccountForPeriod(account, period);
 
 		try {
 			Files.createDirectories(Path.of("excerpt"));
@@ -75,7 +75,7 @@ public class DocumentsFunctionality {
 			bw.write(String.format(" %-26s| %-37s\n", "Остаток", account.getBalance()));
 			bw.write(String.format(" %-12s| %-33s | %-15s\n", "   Дата", "           Примечание", "    Сумма"));
 			bw.write(String.format("%66s\n", "").replace(" ", "-"));
-			for (TransactionDb transaction : transactions) {
+			for (Transaction transaction : transactions) {
 				String amount = transaction.getAmount() + " " + transaction.getCurrency().toString();
 				if (transaction.getTypeOfTransaction().equals(TypeOfTransaction.WITHDRAWAL) ||
 						(transaction.getTypeOfTransaction().equals(TypeOfTransaction.TRANSFER) &&
@@ -100,7 +100,7 @@ public class DocumentsFunctionality {
 	 * @param period выписка по этому периоду
 	 */
 	public void excerptInPDF(Account account, Period period) {
-		List<TransactionDb> transactions = transactionService.getTransactionsByAccountForPeriod(account, period);
+		List<Transaction> transactions = transactionService.getTransactionsByAccountForPeriod(account, period);
 
 		try {
 			Files.createDirectories(Path.of("excerpt"));
@@ -152,7 +152,7 @@ public class DocumentsFunctionality {
 			contentStream.showText(String.format("%66s", "").replace(" ", "-"));
 			contentStream.newLine();
 			int i = 1;
-			for (TransactionDb transaction : transactions) {
+			for (Transaction transaction : transactions) {
 				if (i == 41) {
 					contentStream.endText();
 					contentStream.close();

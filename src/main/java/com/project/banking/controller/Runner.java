@@ -3,12 +3,11 @@ package com.project.banking.controller;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TypeOfTransaction;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.Bank;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Bank;
+import com.project.banking.domain.Transaction;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.UserService;
-import com.project.banking.util.IsPercentsNeeded;
 import com.project.banking.util.SwitchInputMethods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -62,7 +61,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите перевести:");
 					double amount = sim.getAmount(sendingAccount);
 
-					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.TRANSFER, 1, receivingBank, sendingAccount.getId(), receivingAccount, amount, Currency.BYN);
+					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.TRANSFER, 1, receivingBank, sendingAccount.getId(), receivingAccount, amount, Currency.BYN);
 					accountService.transfer(transaction);
 					break;
 				}
@@ -73,7 +72,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите снять:");
 					double amount = sim.getAmount(sendingAccount);
 
-					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.WITHDRAWAL, 1, 1, sendingAccount.getId(), sendingAccount.getId(), amount, Currency.BYN);
+					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.WITHDRAWAL, 1, 1, sendingAccount.getId(), sendingAccount.getId(), amount, Currency.BYN);
 					accountService.withdrawal(transaction);
 					break;
 				}
@@ -86,7 +85,7 @@ public class Runner {
 					System.out.println("Введите сумму, которую хотите перевести:");
 					double amount = scanner.nextDouble();
 
-					TransactionDb transaction = new TransactionDb(new Date(), TypeOfTransaction.PAYIN, 1, receivingBank, 1, receivingAccount, amount, Currency.BYN);
+					Transaction transaction = new Transaction(new Date(), TypeOfTransaction.PAYIN, 1, receivingBank, 1, receivingAccount, amount, Currency.BYN);
 					accountService.payIn(transaction);
 					break;
 				}

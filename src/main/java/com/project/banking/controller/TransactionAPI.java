@@ -1,8 +1,10 @@
 package com.project.banking.controller;
 
-import com.project.banking.model.*;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Transaction;
 import com.project.banking.service.TransactionService;
+import com.project.banking.to.client.Callback;
+import com.project.banking.to.client.TransactionIncoming;
+import com.project.banking.to.front.FinalisingTransactionResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +20,12 @@ public class TransactionAPI {
 	}
 
 	@PostMapping(value="/pay", produces = MediaType.APPLICATION_JSON_VALUE)
-	public TransactionCallback makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {					// посылает ответ на бек A
+	public Callback makeTransaction(@RequestBody TransactionIncoming transactionIncoming) {					// посылает ответ на бек A
 		return transactionService.createTransaction(transactionIncoming);
 	}
 
 	@PostMapping(value = "/confirming")
-	public FinalisingTransactionResult finaliseTransaction(@RequestBody TransactionDb transaction) {						// посылает ответ на фронт B
+	public FinalisingTransactionResult finaliseTransaction(@RequestBody Transaction transaction) {					// посылает ответ на фронт B
 		return transactionService.finaliseTransaction(transaction);
 	}
 }

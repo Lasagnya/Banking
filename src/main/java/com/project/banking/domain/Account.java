@@ -1,4 +1,4 @@
-package com.project.banking.model.database;
+package com.project.banking.domain;
 
 import com.project.banking.enumeration.Currency;
 import jakarta.persistence.*;

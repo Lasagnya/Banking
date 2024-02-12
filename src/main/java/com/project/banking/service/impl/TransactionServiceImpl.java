@@ -3,18 +3,22 @@ package com.project.banking.service.impl;
 import com.project.banking.client.CallbackClient;
 import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TransactionStatus;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.TransactionDb;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Transaction;
 import com.project.banking.repository.TransactionRepository;
 import com.project.banking.service.AccountService;
-import com.project.banking.service.TransactionCallbackService;
 import com.project.banking.service.TransactionService;
+import com.project.banking.to.client.Callback;
+import com.project.banking.to.client.TransactionIncoming;
+import com.project.banking.to.front.ApiError;
+import com.project.banking.to.front.FinalisingTransactionResult;
+import com.project.banking.to.front.OngoingTransaction;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
-import com.project.banking.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -27,96 +31,98 @@ import java.util.Optional;
 public class TransactionServiceImpl implements TransactionService {
 	private final TransactionRepository transactionRepository;
 	private ConfirmationCodeFunctionality confirmationCode;
-	private final TransactionCallbackService transactionCallbackService;
 	private final AccountService accountService;
 	private final CallbackClient callbackClient;
 	private final TransactionVerification transactionVerification;
 
 	@Autowired
-	public TransactionServiceImpl(TransactionRepository transactionRepository, @Lazy ConfirmationCodeFunctionality confirmationCode, TransactionCallbackService transactionCallbackService, AccountService accountService, CallbackClient callbackClient, TransactionVerification transactionVerification) {
+	public TransactionServiceImpl(TransactionRepository transactionRepository, @Lazy ConfirmationCodeFunctionality confirmationCode, AccountService accountService, CallbackClient callbackClient, TransactionVerification transactionVerification) {
 		this.transactionRepository = transactionRepository;
 		this.confirmationCode = confirmationCode;
-		this.transactionCallbackService = transactionCallbackService;
 		this.accountService = accountService;
 		this.callbackClient = callbackClient;
 		this.transactionVerification = transactionVerification;
 	}
 
 	@Override
-	public Optional<TransactionDb> findById(int id) {
+	public Optional<Transaction> findById(int id) {
 		return transactionRepository.findById(id);
 	}
 
 	@Override
-	public TransactionDb saveTransaction(TransactionDb transaction) {
+	public Transaction saveTransaction(Transaction transaction) {
 		return transactionRepository.save(transaction);
 	}
 
 	@Override
-	public TransactionDb update(TransactionDb transaction) {
+	public Transaction update(Transaction transaction) {
 		return transactionRepository.save(transaction);
 	}
 
 	@Override
-	public TransactionDb fillAndSave(TransactionIncoming transactionIncoming) {
-		TransactionDb transaction = new TransactionDb(transactionIncoming);
+	public Transaction fillAndSave(TransactionIncoming transactionIncoming) {
+		Transaction transaction = new Transaction(transactionIncoming);
 		return saveTransaction(transaction);
 	}
 
 	@Override
-	public TransactionDb updateTransactionStatus(TransactionDb transaction, TransactionStatus newStatus) {
+	@Transactional
+	public Transaction updateTransactionStatus(Transaction transaction, TransactionStatus newStatus) {
 		transaction.setStatus(newStatus);
 		transactionRepository.save(transaction);
 		return transaction;
 	}
 
 	@Override
-	public Integer generateAndSaveCode(TransactionDb transaction) {
+	@Transactional
+	public Transaction generateAndSaveCode(Transaction transaction) {
 		Integer code = confirmationCode.generateConfirmationCode(transaction);
-		saveConfirmationCode(transaction.getId(), code);
-		return code;
+		transaction.setConfirmationCode(code);
+//		saveConfirmationCode(transaction.getId(), code);
+		return transaction;
 	}
 
 	@Override
+	@Transactional
 	public void saveConfirmationCode(int id, Integer code) {
-		Optional<TransactionDb> transactionDb = findById(id);
-		if (transactionDb.isPresent()) {
-			transactionDb.get().setConfirmationCode(code);
-			update(transactionDb.get());
-		}
+		findById(id).ifPresent(transaction -> {
+			transaction.setConfirmationCode(code);
+			this.update(transaction);
+		});
 	}
 
 	public Integer getConfirmationCode(int id) {
-		return findById(id).map(TransactionDb::getConfirmationCode).orElse(null);
+		return findById(id).map(Transaction::getConfirmationCode).orElse(null);
 	}
 
 	@Override
-	public TransactionCallback createTransaction(TransactionIncoming transactionIncoming) {
+	@Transactional
+	public Callback createTransaction(TransactionIncoming transactionIncoming) {
 		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
 		if (errors == 0) {																									// Если ошибок нет, то
-			TransactionDb transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
-			generateAndSaveCode(transaction);																				// генерируем код подтверждения
+			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
+			transaction = generateAndSaveCode(transaction);																				// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			return transactionCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
+			return new Callback(transaction, transaction.getClientInformation());
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
-			TransactionDb transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
+			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
 			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
-			return transactionCallbackService.fillAndSave(transaction, transactionIncoming);								// сохраняем callback в бд
+			return new Callback(transaction, transaction.getClientInformation());
 		}
 		else {																												// Если ошибки с банком или счётом, то
-			return TransactionCallback.generateInvalidCallback(transactionIncoming);										// генерируем callback со статусом invalid
+			return Callback.generateInvalidCallback(transactionIncoming);										// генерируем callback со статусом invalid
 		}
 	}
 
 	@Override
-	public void sendExpiredTransaction(TransactionDb transaction) {
-		TransactionCallback transactionCallback = transactionCallbackService.findById(transaction.getId()).get();
-		callbackClient.sendTransaction(transactionCallback);
+	public void sendExpiredTransaction(Transaction transaction) {
+		Callback callback = new Callback(transaction, transaction.getClientInformation());
+		callbackClient.sendTransaction(callback);
 	}
 
 	@Override
-	public List<TransactionDb> getTransactionsByAccountForPeriod(Account account, Period period) {
+	public List<Transaction> getTransactionsByAccountForPeriod(Account account, Period period) {
 		Date limit = Date.from(Instant.MIN);
 		if (period == Period.MONTH) {
 			limit = Date.from(LocalDate.now().minusMonths(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -128,25 +134,26 @@ public class TransactionServiceImpl implements TransactionService {
 	}
 
 	@Override
-	public FinalisingTransactionResult finaliseTransaction(TransactionDb transaction) {
-		Optional<TransactionDb> optionalTransaction = findById(transaction.getId());
-		if (optionalTransaction.isPresent()) {																				// Если транзакция существует
-			if (optionalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
-				return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(3));
+	@Transactional
+	public FinalisingTransactionResult finaliseTransaction(Transaction transaction) {
+		Optional<Transaction> originalTransaction = findById(transaction.getId());
+		if (originalTransaction.isPresent()) {																				// Если транзакция существует
+			if (originalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
+				return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(3));
 			}
-			if (optionalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
-				if (confirmationCode.verifyConfirmationCode(transaction, optionalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
-					accountService.transfer(optionalTransaction.get());															// при корректности переводим средства
-					transaction = updateTransactionStatus(transaction, TransactionStatus.PAID);								// обновляем статус на PAID
-					TransactionCallback transactionCallback = transactionCallbackService.findById(transaction.getId()).get();	// и посылаем клиенту новый статус
-					callbackClient.sendTransaction(transactionCallback);
-					return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(0));
+			if (originalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
+				if (confirmationCode.verifyConfirmationCode(transaction, originalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
+					accountService.transfer(originalTransaction.get());														// при корректности переводим средства
+					transaction = updateTransactionStatus(originalTransaction.get(), TransactionStatus.PAID);				// обновляем статус на PAID
+					Callback callback = new Callback(transaction, transaction.getClientInformation());
+					callbackClient.sendTransaction(callback);
+					return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(0));
 				} else {
-					return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(2));
+					return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(2));
 				}
 			}
-			return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(4));									// если любой иной статус транзакции — возвращаем пользователю ошибку
+			return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(4));			// если любой иной статус транзакции — возвращаем пользователю ошибку
 		}
-		return new FinalisingTransactionResult(new Transaction(transaction), new ApiError(1));										// если транзакция не найдена — возвращаем ошибку
+		return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(1));				// если транзакция не найдена — возвращаем ошибку
 	}
 }

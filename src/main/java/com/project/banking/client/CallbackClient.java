@@ -1,12 +1,12 @@
 package com.project.banking.client;
 
-import com.project.banking.model.TransactionCallback;
+import com.project.banking.to.client.Callback;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Service
 public interface CallbackClient {
-	RestClient getClientConnection(TransactionCallback transactionCallback);
+	RestClient getClientConnection(Callback callback);
 
-	void sendTransaction(TransactionCallback transaction);
+	void sendTransaction(Callback transaction);
 }

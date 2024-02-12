@@ -1,6 +1,6 @@
 package com.project.banking.service;
 
-import com.project.banking.model.database.User;
+import com.project.banking.domain.User;
 
 import java.util.Optional;
 

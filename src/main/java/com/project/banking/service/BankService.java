@@ -1,6 +1,6 @@
 package com.project.banking.service;
 
-import com.project.banking.model.database.Bank;
+import com.project.banking.domain.Bank;
 
 import java.util.List;
 import java.util.Optional;

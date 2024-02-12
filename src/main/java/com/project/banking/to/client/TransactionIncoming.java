@@ -1,4 +1,4 @@
-package com.project.banking.model;
+package com.project.banking.to.client;
 
 import com.project.banking.enumeration.Currency;
 import lombok.*;

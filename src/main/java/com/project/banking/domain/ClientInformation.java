@@ -1,20 +1,18 @@
-package com.project.banking.model.database;
+package com.project.banking.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.project.banking.model.TransactionCallback;
+import com.project.banking.to.client.Callback;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 @Entity
-@Table(name = "transaction_callback")
-public class TransactionCallbackDb {
+@Table(name = "client_information")
+public class ClientInformation {
 	/** id внутри банкинга */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +27,20 @@ public class TransactionCallbackDb {
 	@Column(name = "callback_uri")
 	private String callbackUri;
 
-	public TransactionCallbackDb(TransactionCallback transaction) {
+	@OneToOne
+	@JoinColumn(name = "transaction_id", referencedColumnName = "id")
+	@JsonIgnore
+	private Transaction transaction;
+
+	public ClientInformation(Callback transaction) {
 		id = transaction.getId();
 		invoiceId = transaction.getInvoiceId();
 		callbackUri = transaction.getCallbackUri();
+	}
+
+	public ClientInformation(int id, int invoiceId, String callbackUri) {
+		this.id = id;
+		this.invoiceId = invoiceId;
+		this.callbackUri = callbackUri;
 	}
 }
