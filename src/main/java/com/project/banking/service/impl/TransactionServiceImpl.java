@@ -5,20 +5,23 @@ import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.domain.Account;
 import com.project.banking.domain.Transaction;
+import com.project.banking.exception.ConfirmationInputException;
 import com.project.banking.repository.TransactionRepository;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.TransactionService;
 import com.project.banking.to.client.Callback;
 import com.project.banking.to.client.TransactionIncoming;
-import com.project.banking.to.front.ApiError;
-import com.project.banking.to.front.FinalisingTransactionResult;
 import com.project.banking.to.front.OngoingTransaction;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebInputException;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -97,21 +100,21 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	@Transactional
-	public Callback createTransaction(TransactionIncoming transactionIncoming) {
+	public ResponseEntity<Callback> createTransaction(TransactionIncoming transactionIncoming) {
 		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
 		if (errors == 0) {																									// Если ошибок нет, то
 			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
 			transaction = generateAndSaveCode(transaction);																				// генерируем код подтверждения
 			confirmationCode.expiryTimer(transaction);
-			return new Callback(transaction, transaction.getClientInformation());
+			return new ResponseEntity<>(new Callback(transaction, transaction.getClientInformation()), HttpStatus.OK);
 		}
 		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
 			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
 			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
-			return new Callback(transaction, transaction.getClientInformation());
+			return new ResponseEntity<>(new Callback(transaction, transaction.getClientInformation()), HttpStatus.CONFLICT);
 		}
 		else {																												// Если ошибки с банком или счётом, то
-			return Callback.generateInvalidCallback(transactionIncoming);										// генерируем callback со статусом invalid
+			return new ResponseEntity<>(Callback.generateInvalidCallback(transactionIncoming), HttpStatus.CONFLICT);		// генерируем callback со статусом invalid
 		}
 	}
 
@@ -135,11 +138,11 @@ public class TransactionServiceImpl implements TransactionService {
 
 	@Override
 	@Transactional
-	public FinalisingTransactionResult finaliseTransaction(Transaction transaction) {
+	public ResponseEntity<OngoingTransaction> finaliseTransaction(Transaction transaction) throws ResponseStatusException {
 		Optional<Transaction> originalTransaction = findById(transaction.getId());
 		if (originalTransaction.isPresent()) {																				// Если транзакция существует
 			if (originalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
-				return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(3));
+				throw new ConfirmationInputException("Transaction has already expired");
 			}
 			if (originalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
 				if (confirmationCode.verifyConfirmationCode(transaction, originalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
@@ -147,13 +150,13 @@ public class TransactionServiceImpl implements TransactionService {
 					transaction = updateTransactionStatus(originalTransaction.get(), TransactionStatus.PAID);				// обновляем статус на PAID
 					Callback callback = new Callback(transaction, transaction.getClientInformation());
 					callbackClient.sendTransaction(callback);
-					return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(0));
+					return new ResponseEntity<>(new OngoingTransaction(transaction), HttpStatus.OK);
 				} else {
-					return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(2));
+					throw new ConfirmationInputException("Incorrect code");
 				}
 			}
-			return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(4));			// если любой иной статус транзакции — возвращаем пользователю ошибку
-		}
-		return new FinalisingTransactionResult(new OngoingTransaction(transaction), new ApiError(1));				// если транзакция не найдена — возвращаем ошибку
+			throw new ServerWebInputException("Transaction has already been completed");
+		} else
+			throw new ServerWebInputException("Transaction not found, incorrect id");
 	}
 }

@@ -108,7 +108,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
+				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
 				.andExpect(jsonPath("$.invoiceId", is(transactionIncoming.getInvoiceId())))
 				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
@@ -124,7 +124,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
+				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
 				.andExpect(jsonPath("$.invoiceId", is(transactionIncoming.getInvoiceId())))
 				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
@@ -143,7 +143,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
+				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.status", is(TransactionStatus.INVALID.toString())))
 				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
 				.andDo(print());
@@ -164,10 +164,9 @@ public class TransactionApiTest {
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.ongoingTransaction.id", is(transaction.getId())))
-				.andExpect(jsonPath("$.ongoingTransaction.status", is(TransactionStatus.PAID.toString())))
-				.andExpect(jsonPath("$.ongoingTransaction.amount", is(transactionIncoming.getAmount())))
-				.andExpect(jsonPath("$.apiError.errorId", is(0)))
+				.andExpect(jsonPath("$.id", is(transaction.getId())))
+				.andExpect(jsonPath("$.status", is(TransactionStatus.PAID.toString())))
+				.andExpect(jsonPath("$.amount", is(transactionIncoming.getAmount())))
 				.andDo(print());
 	}
 
@@ -181,16 +180,12 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.ongoingTransaction.id", is(transaction.getId())))
-				.andExpect(jsonPath("$.ongoingTransaction.status", is(TransactionStatus.EXPIRED.toString())))
-				.andExpect(jsonPath("$.ongoingTransaction.amount", is(transactionIncoming.getAmount())))
-				.andExpect(jsonPath("$.apiError.errorId", is(3)))
+				.andExpect(status().isConflict())
 				.andDo(print());
 	}
 
 	@Test
-	public void finaliseTransaction_Invalid() throws Exception {
+	public void finaliseTransaction_AlreadyInvalid() throws Exception {
 		Transaction transaction = new Transaction(25, new Date(), TypeOfTransaction.TRANSFER, 1, 1, 1234, 12345678, 100.0, Currency.BYN, TransactionStatus.INVALID, 1);
 		Mockito.when(transactionRepository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
@@ -199,11 +194,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.ongoingTransaction.id", is(transaction.getId())))
-				.andExpect(jsonPath("$.ongoingTransaction.status", is(TransactionStatus.INVALID.toString())))
-				.andExpect(jsonPath("$.ongoingTransaction.amount", is(transactionIncoming.getAmount())))
-				.andExpect(jsonPath("$.apiError.errorId", is(4)))
+				.andExpect(status().is4xxClientError())
 				.andDo(print());
 	}
 
@@ -218,11 +209,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.ongoingTransaction.id", is(transaction.getId())))
-				.andExpect(jsonPath("$.ongoingTransaction.status", is(TransactionStatus.PENDING.toString())))
-				.andExpect(jsonPath("$.ongoingTransaction.amount", is(transactionIncoming.getAmount())))
-				.andExpect(jsonPath("$.apiError.errorId", is(2)))
+				.andExpect(status().isConflict())
 				.andDo(print());
 	}
 
@@ -236,11 +223,7 @@ public class TransactionApiTest {
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.ongoingTransaction.id", is(transaction.getId())))
-				.andExpect(jsonPath("$.ongoingTransaction.status", is(transaction.getStatus().toString())))
-				.andExpect(jsonPath("$.ongoingTransaction.amount", is(transactionIncoming.getAmount())))
-				.andExpect(jsonPath("$.apiError.errorId", is(1)))
+				.andExpect(status().is4xxClientError())
 				.andDo(print());
 	}
 }

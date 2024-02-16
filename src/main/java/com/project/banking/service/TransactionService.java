@@ -6,7 +6,9 @@ import com.project.banking.domain.Account;
 import com.project.banking.domain.Transaction;
 import com.project.banking.to.client.Callback;
 import com.project.banking.to.client.TransactionIncoming;
-import com.project.banking.to.front.FinalisingTransactionResult;
+import com.project.banking.to.front.OngoingTransaction;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +30,9 @@ public interface TransactionService {
 
 	Integer getConfirmationCode(int id);
 
-	Callback createTransaction(TransactionIncoming transactionIncoming);
+	ResponseEntity<Callback> createTransaction(TransactionIncoming transactionIncoming);
 
-	FinalisingTransactionResult finaliseTransaction(Transaction transaction);
+	ResponseEntity<OngoingTransaction> finaliseTransaction(Transaction transaction) throws ResponseStatusException;
 
 	void sendExpiredTransaction(Transaction transaction);
 
