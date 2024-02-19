@@ -5,12 +5,13 @@ import com.project.banking.domain.Transaction;
 import com.project.banking.service.TransactionService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-@Service
-public class ExpiryFunctionality extends Thread {
+@Component
+public class ExpiryFunctionality {
 	private final TransactionService transactionService;
 	@Setter
 	private Transaction transaction;
@@ -20,7 +21,7 @@ public class ExpiryFunctionality extends Thread {
 		this.transactionService = transactionService;
 	}
 
-	@Override
+	@Async
 	public void run() {
 		try {
 			TimeUnit.MINUTES.sleep(2);

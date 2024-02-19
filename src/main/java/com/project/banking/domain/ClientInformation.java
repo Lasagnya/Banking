@@ -43,4 +43,13 @@ public class ClientInformation {
 		this.invoiceId = invoiceId;
 		this.callbackUri = callbackUri;
 	}
+
+	@Override
+	public String toString() {
+		return "ClientInformation{" +
+				"id=" + id +
+				", invoiceId=" + invoiceId +
+				", callbackUri='" + callbackUri + '\'' +
+				'}';
+	}
 }

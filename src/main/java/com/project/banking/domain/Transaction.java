@@ -15,7 +15,6 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @EqualsAndHashCode
 @Entity
 @Table(name = "transaction")
@@ -124,5 +123,23 @@ public class Transaction {
 		this.currency = currency;
 		this.status = status;
 		this.confirmationCode = confirmationCode;
+	}
+
+	@Override
+	public String toString() {
+		return "Transaction{" +
+				"id=" + id +
+				", time=" + time +
+				", typeOfTransaction=" + typeOfTransaction +
+				", sendingBank=" + sendingBank +
+				", receivingBank=" + receivingBank +
+				", sendingAccount=" + sendingAccount +
+				", receivingAccount=" + receivingAccount +
+				", amount=" + amount +
+				", currency=" + currency +
+				", status=" + status +
+				", confirmationCode=" + confirmationCode +
+				", clientInformation=" + clientInformation +
+				'}';
 	}
 }

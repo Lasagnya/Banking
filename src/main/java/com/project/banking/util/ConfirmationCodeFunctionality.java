@@ -26,6 +26,6 @@ public class ConfirmationCodeFunctionality {
 
 	public void expiryTimer(Transaction transaction) {
 		expiryFunctionality.setTransaction(transaction);
-		expiryFunctionality.start();
+		expiryFunctionality.run();
 	}
 }
