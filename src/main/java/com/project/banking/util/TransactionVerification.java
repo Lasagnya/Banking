@@ -1,6 +1,7 @@
 package com.project.banking.util;
 
 import com.project.banking.domain.Account;
+import com.project.banking.exception.*;
 import com.project.banking.to.client.TransactionIncoming;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.BankService;
@@ -18,42 +19,30 @@ public class TransactionVerification {
 		this.accountService = accountService;
 	}
 
-	/**
-	 * @return returns integer value, where each digit of the number means
-	 * 			the result of the verification from 0 to 10. The first digit
-	 * 			is receivingBank, the second is receivingAccount, the third
-	 * 			is sendingAccount, the forth is amount of transaction.
-	 * */
-	public int verify(TransactionIncoming transaction) {																	// TODO по идее, так возвращать не очень красиво
-		int errors = isBankCorrect(transaction.getReceivingBank()) +
-				isReceivingAccountCorrect(transaction.getReceivingAccount()) +
-				isSendingAccountCorrect(transaction.getSendingAccount());
-		if (errors == 0)
-			errors += isAmountCorrect(accountService.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
-		return errors;
+	public void verify(TransactionIncoming transaction) throws TransactionVerificationException {
+		isBankCorrect(transaction.getReceivingBank());
+		isReceivingAccountCorrect(transaction.getReceivingAccount());
+		isSendingAccountCorrect(transaction.getSendingAccount());
+		isAmountCorrect(accountService.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
 	}
 
-	private int isBankCorrect(int id) {
-		if (bankService.findById(id).isPresent())
-			return 0;
-		else return 1 * 1;
+	private void isBankCorrect(int id) throws IncorrectBankException {
+		if (bankService.findById(id).isEmpty())
+			throw new IncorrectBankException();
 	}
 
-	private int isReceivingAccountCorrect(int id) {
-		if (accountService.findById(id).isPresent())
-			return 0;
-		else return 1 * 10;
+	private void isReceivingAccountCorrect(int id) throws IncorrectReceivingAccountException {
+		if (accountService.findById(id).isEmpty())
+			throw new IncorrectReceivingAccountException();
 	}
 
-	private int isSendingAccountCorrect(int id) {
-		if (accountService.findById(id).isPresent())
-			return 0;
-		else return 1 * 100;
+	private void isSendingAccountCorrect(int id) throws IncorrectSendingAccountException {
+		if (accountService.findById(id).isEmpty())
+			throw new IncorrectSendingAccountException();
 	}
 
-	private int isAmountCorrect(Account account, double amount) {
-		if (account.getBalance() >= amount)
-			return 0;
-		else return 1 * 1000;
+	private void isAmountCorrect(Account account, double amount) throws IncorrectAmountException {
+		if (account.getBalance() < amount)
+			throw new IncorrectAmountException();
 	}
 }

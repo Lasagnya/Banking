@@ -5,7 +5,7 @@ import com.project.banking.enumeration.Period;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.domain.Account;
 import com.project.banking.domain.Transaction;
-import com.project.banking.exception.ConfirmationInputException;
+import com.project.banking.exception.*;
 import com.project.banking.repository.TransactionRepository;
 import com.project.banking.service.AccountService;
 import com.project.banking.service.TransactionService;
@@ -101,21 +101,21 @@ public class TransactionServiceImpl implements TransactionService {
 	@Override
 	@Transactional
 	public ResponseEntity<Callback> createTransaction(TransactionIncoming transactionIncoming) {
-		int errors = transactionVerification.verify(transactionIncoming);													// Верификация транзакции
-		if (errors == 0) {																									// Если ошибок нет, то
-			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
-			transaction = generateAndSaveCode(transaction);																				// генерируем код подтверждения
-			confirmationCode.expiryTimer(transaction);
-			return new ResponseEntity<>(new Callback(transaction, transaction.getClientInformation()), HttpStatus.OK);
-		}
-		else if ((errors / 1000) % 10 != 0) {																				// если ошибка в сумме транзакции, то
-			Transaction transaction = fillAndSave(transactionIncoming);														// сохраняем транзакцию в бд
-			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);									// обновляем статус транзакции на invalid
+		try {
+			transactionVerification.verify(transactionIncoming);
+		} catch (IncorrectBankException | IncorrectReceivingAccountException | IncorrectSendingAccountException e) {
+			return new ResponseEntity<>(Callback.generateInvalidCallback(transactionIncoming), HttpStatus.CONFLICT);
+		} catch (IncorrectAmountException e) {
+			Transaction transaction = fillAndSave(transactionIncoming);
+			transaction = updateTransactionStatus(transaction, TransactionStatus.INVALID);
 			return new ResponseEntity<>(new Callback(transaction, transaction.getClientInformation()), HttpStatus.CONFLICT);
+		} catch (TransactionVerificationException e) {
+			throw new RuntimeException(e);
 		}
-		else {																												// Если ошибки с банком или счётом, то
-			return new ResponseEntity<>(Callback.generateInvalidCallback(transactionIncoming), HttpStatus.CONFLICT);		// генерируем callback со статусом invalid
-		}
+		Transaction transaction = fillAndSave(transactionIncoming);
+		transaction = generateAndSaveCode(transaction);
+		confirmationCode.expiryTimer(transaction);
+		return new ResponseEntity<>(new Callback(transaction, transaction.getClientInformation()), HttpStatus.OK);
 	}
 
 	@Override

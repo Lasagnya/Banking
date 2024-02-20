@@ -7,6 +7,9 @@ import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
 import com.project.banking.enumeration.TypeOfTransaction;
 import com.project.banking.domain.Transaction;
+import com.project.banking.exception.IncorrectAmountException;
+import com.project.banking.exception.IncorrectBankException;
+import com.project.banking.exception.IncorrectReceivingAccountException;
 import com.project.banking.repository.*;
 import com.project.banking.service.*;
 import com.project.banking.service.impl.AccountServiceImpl;
@@ -84,7 +87,6 @@ public class TransactionApiTest {
 	public void makeTransaction_succeed() throws Exception {
 		Transaction transaction = new Transaction(transactionIncoming);
 		transaction.setId(0);
-		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(0);
 		Mockito.when(transactionRepository.save(ArgumentMatchers.any())).thenReturn(transaction);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
@@ -101,7 +103,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void makeTransaction_incorrectBank() throws Exception {
-		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(1);
+		Mockito.doThrow(new IncorrectBankException()).when(transactionVerification).verify(transactionIncoming);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +119,7 @@ public class TransactionApiTest {
 
 	@Test
 	public void makeTransaction_incorrectAccount() throws Exception {
-		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(10);
+		Mockito.doThrow(new IncorrectReceivingAccountException()).when(transactionVerification).verify(transactionIncoming);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -135,7 +137,7 @@ public class TransactionApiTest {
 	public void makeTransaction_incorrectAmount() throws Exception {
 		Transaction transaction = new Transaction(transactionIncoming);
 		transaction.setId(0);
-		Mockito.when(transactionVerification.verify(transactionIncoming)).thenReturn(1000);
+		Mockito.doThrow(new IncorrectAmountException()).when(transactionVerification).verify(transactionIncoming);
 		Mockito.when(transactionRepository.save(ArgumentMatchers.any())).thenReturn(transaction);
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
