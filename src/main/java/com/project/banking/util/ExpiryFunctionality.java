@@ -5,12 +5,14 @@ import com.project.banking.domain.Transaction;
 import com.project.banking.service.TransactionService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Scope("prototype")
 public class ExpiryFunctionality {
 	private final TransactionService transactionService;
 	@Setter
