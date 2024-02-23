@@ -1,6 +1,7 @@
 package com.project.banking.service;
 
 import com.project.banking.domain.User;
+import com.project.banking.to.front.AuthenticationDTO;
 
 import java.util.Optional;
 
@@ -44,4 +45,8 @@ public interface UserService {
 	 * Обновляет имя у локального пользователя и обновляет базу данных
 	 */
 	void changeUsername();
+
+	AuthenticationDTO authenticatedUser();
+
+	AuthenticationDTO authenticatedAdmin();
 }

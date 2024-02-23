@@ -1,8 +1,11 @@
 package com.project.banking.domain;
 
+import com.project.banking.to.front.AuthenticationDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.modelmapper.ModelMapper;
 
 import java.util.List;
 
@@ -12,6 +15,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "my_user")
 public class User {
@@ -26,8 +30,14 @@ public class User {
 	private String name;
 
 	/** пароль пользователя */
-	@Column(name = "user_password")
+	@Transient
 	private String password;
+
+	@Column(name = "byte_password_hash")
+	private byte[] bytePasswordHash;
+
+	@Column(name = "role")
+	private String role = "ROLE_USER";
 
 	/** id банка-владельца */
 	@ManyToOne
@@ -36,4 +46,15 @@ public class User {
 
 	@OneToMany(mappedBy = "user")
 	private List<Account> accounts;
+
+	public static User build(AuthenticationDTO auth) {
+		ModelMapper modelMapper = new ModelMapper();
+		return modelMapper.map(auth, User.class);
+	}
+
+	public User(AuthenticationDTO auth) {
+		this.name = auth.getUsername();
+		this.password = auth.getPassword();
+		this.bank = new Bank(1);
+	}
 }

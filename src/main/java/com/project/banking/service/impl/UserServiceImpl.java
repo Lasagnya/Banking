@@ -3,9 +3,13 @@ package com.project.banking.service.impl;
 import com.project.banking.domain.User;
 import com.project.banking.repository.UserRepository;
 import com.project.banking.service.UserService;
+import com.project.banking.to.front.AuthenticationDTO;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -79,7 +83,8 @@ public class UserServiceImpl implements UserService {
 			if (scanner.nextInt() == 1) {
 				user = new User();
 				user.setName(name);
-				user.setPassword(getPasswordHash());
+				user.setBytePasswordHash(getPasswordHash().getBytes());														// TODO проверить правильность
+//				user.setPassword(getPasswordHash());
 				save(user);
 			}
 
@@ -92,7 +97,7 @@ public class UserServiceImpl implements UserService {
 		System.out.println("Введите пароль:");
 		byte[] password = scanner.next().getBytes(StandardCharsets.UTF_8);
 		Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 32);
-		while (!argon2.verify(user.getPassword(), password)) {
+		while (!argon2.verify(new String(user.getBytePasswordHash()), password)) {											// TODO проверить правильность
 			System.out.println("Неверный пароль, попробуйте ещё раз!");
 			password = scanner.next().getBytes(StandardCharsets.UTF_8);
 		}
@@ -107,7 +112,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void changePassword() {
-		user.setPassword(getPasswordHash());
+		user.setBytePasswordHash(getPasswordHash().getBytes());																// TODO проверить правильность
 		update(user);
 		System.out.println("Пароль изменён!");
 	}
@@ -120,5 +125,17 @@ public class UserServiceImpl implements UserService {
 		user.setName(name);
 		update(user);
 		System.out.println("Имя изменено на " + name + ".");
+	}
+
+	@PreAuthorize("hasRole('ROLE_USER')")
+	public AuthenticationDTO authenticatedUser() {
+		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		return new AuthenticationDTO(userDetails.getUsername(), userDetails.getPassword());
+	}
+
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
+	public AuthenticationDTO authenticatedAdmin() {
+		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		return new AuthenticationDTO(userDetails.getUsername(), userDetails.getPassword());
 	}
 }
