@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
-public class AuthorizeController {
+@RequestMapping("/api/person")
+public class PersonController {
 	private final UserService userService;
 
 	@Autowired
-	public AuthorizeController(UserService userService) {
+	public PersonController(UserService userService) {
 		this.userService = userService;
 	}
 
@@ -27,5 +27,10 @@ public class AuthorizeController {
 	public String adminMethod() {
 		AuthenticationDTO auth = userService.authenticatedAdmin();
 		return "admin: \n" + auth.toString();
+	}
+
+	@GetMapping("/guest")
+	public String guestMethod() {
+		return "test";
 	}
 }

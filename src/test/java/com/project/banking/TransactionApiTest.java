@@ -2,6 +2,7 @@ package com.project.banking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.banking.client.CallbackClient;
+import com.project.banking.configuration.JWTFilter;
 import com.project.banking.controller.TransactionAPI;
 import com.project.banking.enumeration.Currency;
 import com.project.banking.enumeration.TransactionStatus;
@@ -11,6 +12,7 @@ import com.project.banking.exception.IncorrectAmountException;
 import com.project.banking.exception.IncorrectBankException;
 import com.project.banking.exception.IncorrectReceivingAccountException;
 import com.project.banking.repository.*;
+import com.project.banking.security.JWTUtil;
 import com.project.banking.service.*;
 import com.project.banking.service.impl.AccountServiceImpl;
 import com.project.banking.service.impl.TransactionCallbackServiceImpl;
@@ -18,6 +20,7 @@ import com.project.banking.service.impl.TransactionServiceImpl;
 import com.project.banking.to.client.TransactionIncoming;
 import com.project.banking.util.ConfirmationCodeFunctionality;
 import com.project.banking.util.TransactionVerification;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -30,17 +33,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Date;
 import java.util.Optional;
 
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.*;
 
 @WebMvcTest(TransactionAPI.class)
-@AutoConfigureMockMvc
 public class TransactionApiTest {
 	@Autowired
 	private MockMvc mockMvc;
@@ -56,6 +61,12 @@ public class TransactionApiTest {
 
 	@SpyBean(AccountServiceImpl.class)
 	private AccountService accountService;
+
+	@SpyBean
+	private JWTFilter jwtFilter;
+
+	@SpyBean
+	private JWTUtil jwtUtil;
 
 	@MockBean
 	private TransactionRepository transactionRepository;
@@ -82,6 +93,17 @@ public class TransactionApiTest {
 	private CallbackClient callbackClient;
 
 	private final TransactionIncoming transactionIncoming = new TransactionIncoming(22, 1, 1234, 12345678, 100.0, Currency.BYN, "http://test");
+
+	@Autowired
+	private WebApplicationContext context;
+
+	@BeforeEach
+	public void setup() {
+		mockMvc = MockMvcBuilders
+				.webAppContextSetup(context)
+				.apply(springSecurity())
+				.build();
+	}
 
 	@Test
 	public void makeTransaction_succeed() throws Exception {

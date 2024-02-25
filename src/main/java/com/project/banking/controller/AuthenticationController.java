@@ -4,6 +4,7 @@ import com.project.banking.domain.User;
 import com.project.banking.service.AuthenticationService;
 import com.project.banking.to.front.AuthenticationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,13 +22,13 @@ public class AuthenticationController {
 		this.authenticationService = authenticationService;
 	}
 
-	@PostMapping("/registration")
+	@PostMapping(value = "/registration", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Map<String, String> create(@RequestBody AuthenticationDTO auth) {
 		User user = new User(auth);
 		return authenticationService.register(user);
 	}
 
-	@PostMapping("/login")
+	@PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Map<String, String> login(@RequestBody AuthenticationDTO auth) {
 		User user = new User(auth);
 		return authenticationService.login(user);

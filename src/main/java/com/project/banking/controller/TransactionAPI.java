@@ -26,7 +26,7 @@ public class TransactionAPI {
 		return transactionService.createTransaction(transactionIncoming);
 	}
 
-	@PostMapping(value = "/confirming")
+	@PostMapping(value = "/confirming", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<OngoingTransaction> finaliseTransaction(@RequestBody Transaction transaction) throws ResponseStatusException {	// посылает ответ на фронт B
 		return transactionService.finaliseTransaction(transaction);
 	}

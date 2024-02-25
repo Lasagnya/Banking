@@ -1,17 +1,18 @@
 package com.project.banking.configuration;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.project.banking.exception.InvalidJWTException;
 import com.project.banking.security.JWTUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -21,11 +22,13 @@ import java.io.IOException;
 public class JWTFilter extends OncePerRequestFilter {
 	private final JWTUtil jwtUtil;
 	private final UserDetailsService userDetailsService;
+	private final AuthenticationEntryPoint authenticationEntryPoint;
 
 	@Autowired
-	public JWTFilter(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
+	public JWTFilter(JWTUtil jwtUtil, UserDetailsService userDetailsService, AuthenticationEntryPoint authenticationEntryPoint) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
+		this.authenticationEntryPoint = authenticationEntryPoint;
 	}
 
 	@Override
@@ -35,7 +38,8 @@ public class JWTFilter extends OncePerRequestFilter {
 			String jwt = authHeader.substring(7);
 
 			if (jwt.isBlank()) {
-				response.sendError(HttpStatus.BAD_REQUEST.value(), "JWT token is blank");
+				authenticationEntryPoint.commence(request, response, new InvalidJWTException("JWT token is blank"));
+//				response.sendError(HttpStatus.BAD_REQUEST.value(), "JWT token is blank");
 			} else {
 				try {
 					String username = jwtUtil.validateTokenAndRetrieveClaim(jwt);
@@ -46,10 +50,8 @@ public class JWTFilter extends OncePerRequestFilter {
 						SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 					}
 				} catch (JWTVerificationException e) {
-					response.sendError(HttpStatus.BAD_REQUEST.value(), "Invalid JWT token");
-				}
-				finally {
-					filterChain.doFilter(request, response);
+					authenticationEntryPoint.commence(request, response, new InvalidJWTException("Invalid JWT token"));
+//					response.sendError(HttpStatus.BAD_REQUEST.value(), "Invalid JWT token");
 				}
 			}
 		}
