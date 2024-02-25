@@ -1,5 +1,6 @@
 package com.project.banking.configuration;
 
+import com.project.banking.security.JWTFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

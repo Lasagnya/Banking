@@ -1,8 +1,7 @@
-package com.project.banking.configuration;
+package com.project.banking.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.project.banking.exception.InvalidJWTException;
-import com.project.banking.security.JWTUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
