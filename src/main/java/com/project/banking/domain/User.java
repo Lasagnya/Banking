@@ -31,10 +31,10 @@ public class User {
 
 	/** пароль пользователя */
 	@Transient
-	private String password;
+	private String rawPassword;
 
-	@Column(name = "byte_password_hash")
-	private byte[] bytePasswordHash;
+	@Column(name = "encoded_password")
+	private byte[] encodedPassword;
 
 	@Column(name = "role")
 	private String role = "ROLE_USER";
@@ -54,7 +54,7 @@ public class User {
 
 	public User(AuthenticationDTO auth) {
 		this.name = auth.getUsername();
-		this.password = auth.getPassword();
+		this.rawPassword = auth.getPassword();
 		this.bank = new Bank(1);
 	}
 }

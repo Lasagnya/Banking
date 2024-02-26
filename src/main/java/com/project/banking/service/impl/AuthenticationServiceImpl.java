@@ -32,8 +32,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 	@Override
 	public Map<String, String> register(User user) {
 		user.setRole("ROLE_USER");
-		byte[] hashBytes = passwordEncoder.encode(user.getPassword()).getBytes(StandardCharsets.ISO_8859_1);
-		user.setBytePasswordHash(hashBytes);
+		byte[] hashBytes = passwordEncoder.encode(user.getRawPassword()).getBytes(StandardCharsets.ISO_8859_1);
+		user.setEncodedPassword(hashBytes);
 		userService.save(user);
 		String token = jwtUtil.generateToken(user.getName());
 		return Map.of("jwt-token", token);
@@ -41,7 +41,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 	@Override
 	public Map<String, String> login(User user) {
-		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getName(), user.getPassword());
+		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user.getName(), user.getRawPassword());
 		try {
 			authenticationManager.authenticate(authenticationToken);
 		} catch (AuthenticationException e) {

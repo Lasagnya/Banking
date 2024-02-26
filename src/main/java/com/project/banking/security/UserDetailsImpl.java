@@ -1,7 +1,6 @@
 package com.project.banking.security;
 
 import com.project.banking.domain.User;
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,7 +18,7 @@ public record UserDetailsImpl(User user) implements UserDetails {
 
 	@Override
 	public String getPassword() {
-		return new String(this.user.getBytePasswordHash(), StandardCharsets.ISO_8859_1);
+		return new String(this.user.getEncodedPassword(), StandardCharsets.ISO_8859_1);
 	}
 
 	@Override

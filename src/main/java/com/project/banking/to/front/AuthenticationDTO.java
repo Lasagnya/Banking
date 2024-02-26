@@ -22,6 +22,6 @@ public class AuthenticationDTO {
 
 	public AuthenticationDTO(User user) {
 		this.username = user.getName();
-		this.password = new String(user.getBytePasswordHash());
+		this.password = new String(user.getEncodedPassword());
 	}
 }

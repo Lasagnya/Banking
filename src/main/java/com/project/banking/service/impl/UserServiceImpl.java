@@ -4,16 +4,16 @@ import com.project.banking.domain.User;
 import com.project.banking.repository.UserRepository;
 import com.project.banking.service.UserService;
 import com.project.banking.to.front.AuthenticationDTO;
-import de.mkammerer.argon2.Argon2;
-import de.mkammerer.argon2.Argon2Factory;
+import jakarta.persistence.Transient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -21,10 +21,16 @@ import java.util.Scanner;
 public class UserServiceImpl implements UserService {
 	private final UserRepository userRepository;
 	private static User user;
+	private final PasswordEncoder passwordEncoder;
+	private final AuthenticationManager authenticationManager;
+	private final UserDetailsService userDetailsService;
 
 	@Autowired
-	public UserServiceImpl(UserRepository userRepository) {
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, UserDetailsService userDetailsService) {
 		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.authenticationManager = authenticationManager;
+		this.userDetailsService = userDetailsService;
 	}
 
 	private void defineUser(User user) {
@@ -42,66 +48,61 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void save(User user) {
-		userRepository.save(user);
+	public User save(User user) {
+		return userRepository.save(user);
 	}
 
 	private String getPasswordHash() {
 		Scanner scanner = new Scanner(System.in);
-		byte[] password;
-		byte[] password2;
+		String password;
+		String password2;
 		do {
 			System.out.println("Введите пароль:");
-			password = scanner.next().getBytes(StandardCharsets.UTF_8);
+			password = scanner.next();
 			System.out.println("Введите пароль ещё раз:");
-			password2 = scanner.next().getBytes(StandardCharsets.UTF_8);
-			if (Arrays.equals(password2, password)) {
+			password2 = scanner.next();
+			if (password2.equals(password)) {
 				break;
 			} else System.out.println("Пароли не совпадают, попробуйте ещё раз!");
 		} while (true);
-		Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 32);
-		String hash = argon2.hash(1, 65536, 1, password);
-		argon2.wipeArray(password);
-		argon2.wipeArray(password2);
-		return hash;
+		return passwordEncoder.encode(password);
 	}
 
 	@Override
 	public void authentication() {
 		Scanner scanner = new Scanner(System.in);
-		User user;
 		System.out.println("Необходимо войти в аккаунт.\n" +
 				"Введите имя пользователя:");
 		String name = scanner.next();
+		Optional<User> authUser = findByName(name);
 
-		while (findByName(name).isEmpty()) {
+
+		while (authUser.isEmpty()) {
 			System.out.println("""
 					Такого пользователя не существует. Хотите создать?
 					1: создать пользователя
 					2: ввести имя ещё раз""");
 
 			if (scanner.nextInt() == 1) {
-				user = new User();
-				user.setName(name);
-				user.setBytePasswordHash(getPasswordHash().getBytes());
-				save(user);
+				User newUser = new User();
+				newUser.setName(name);
+				newUser.setEncodedPassword(getPasswordHash().getBytes());
+				save(newUser);
 			}
 
 			System.out.println("Необходимо войти в аккаунт\n" +
 					"Введите имя пользователя:");
-			name = scanner.next();
+			authUser = findByName(scanner.next());
 		}
-		user = findByName(name).get();
 
 		System.out.println("Введите пароль:");
-		byte[] password = scanner.next().getBytes(StandardCharsets.UTF_8);
-		Argon2 argon2 = Argon2Factory.create(Argon2Factory.Argon2Types.ARGON2id, 16, 32);
-		while (!argon2.verify(new String(user.getBytePasswordHash()), password)) {
+		String password = scanner.next();
+		while (!passwordEncoder.matches(password, new String(authUser.get().getEncodedPassword()))) {
 			System.out.println("Неверный пароль, попробуйте ещё раз!");
-			password = scanner.next().getBytes(StandardCharsets.UTF_8);
+			password = scanner.next();
 		}
-		argon2.wipeArray(password);
-		defineUser(user);
+		defineUser(authUser.get());
+//		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(name, password));
 	}
 
 	@Override
@@ -110,17 +111,25 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transient
 	public void changePassword() {
-		user.setBytePasswordHash(getPasswordHash().getBytes());
+//		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//		Optional<User> user1 = findByName(userDetails.getUsername());
+//		user1.ifPresent(o -> o.setBytePasswordHash(getEncodedPassword().getBytes()));
+		user.setEncodedPassword(getPasswordHash().getBytes());
 		update(user);
 		System.out.println("Пароль изменён!");
 	}
 
 	@Override
+	@Transient
 	public void changeUsername() {
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Введите новое имя пользователя:");
 		String name = scanner.next();
+//		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//		Optional<User> user1 = findByName(userDetails.getUsername());
+//		user1.ifPresent(o -> o.setName(name));
 		user.setName(name);
 		update(user);
 		System.out.println("Имя изменено на " + name + ".");
