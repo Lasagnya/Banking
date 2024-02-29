@@ -6,8 +6,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
+@ComponentScan(basePackages = "com.project.banking",
+		excludeFilters = @ComponentScan.Filter(SpringBootApplication.class))
 public class ConsoleApplication implements CommandLineRunner {
 	private final Runner runner;
 
