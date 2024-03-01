@@ -142,7 +142,7 @@ public class TransactionServiceImpl implements TransactionService {
 		Optional<Transaction> originalTransaction = findById(transaction.getId());
 		if (originalTransaction.isPresent()) {																				// Если транзакция существует
 			if (originalTransaction.get().getStatus() == TransactionStatus.EXPIRED) {										// Если просрочена — возвращаем клиенту статус просрочена
-				throw new ConfirmationInputException("Transaction has already expired");
+				throw new ServerWebInputException("Transaction has already expired");
 			}
 			if (originalTransaction.get().getStatus() == TransactionStatus.PENDING) {										// Если статус ожидания подтверждения, то:
 				if (confirmationCode.verifyConfirmationCode(transaction, originalTransaction.get().getConfirmationCode())) {// проверяем пришедший код
@@ -152,7 +152,7 @@ public class TransactionServiceImpl implements TransactionService {
 					callbackClient.sendTransaction(callback);
 					return new ResponseEntity<>(new OngoingTransaction(transaction), HttpStatus.OK);
 				} else {
-					throw new ConfirmationInputException("Incorrect code");
+					throw new ServerWebInputException("Incorrect code");
 				}
 			}
 			throw new ServerWebInputException("Transaction has already been completed");

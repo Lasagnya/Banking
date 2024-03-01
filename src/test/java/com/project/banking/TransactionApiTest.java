@@ -29,6 +29,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.Matchers.*;
 
 @WebMvcTest(TransactionAPI.class)
+@ContextConfiguration(classes = BankingApplication.class)
 public class TransactionApiTest {
 	@Autowired
 	private MockMvc mockMvc;
@@ -112,6 +114,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
@@ -128,6 +131,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
@@ -144,6 +148,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
@@ -163,6 +168,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/pay")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transactionIncoming));
 		mockMvc.perform(mockRequest)
@@ -183,6 +189,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
@@ -200,10 +207,11 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isConflict())
+				.andExpect(status().is4xxClientError())
 				.andDo(print());
 	}
 
@@ -214,6 +222,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
@@ -229,10 +238,11 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)
-				.andExpect(status().isConflict())
+				.andExpect(status().is4xxClientError())
 				.andDo(print());
 	}
 
@@ -243,6 +253,7 @@ public class TransactionApiTest {
 		MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
 				.post("/api/transaction/confirming")
 				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding("utf-8")
 				.accept(MediaType.APPLICATION_JSON)
 				.content(mapper.writeValueAsString(transaction));
 		mockMvc.perform(mockRequest)

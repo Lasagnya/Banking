@@ -1,6 +1,7 @@
 package com.project.banking.service.impl;
 
 import com.project.banking.domain.User;
+import com.project.banking.exception.AuthenticationErrorException;
 import com.project.banking.security.JWTUtil;
 import com.project.banking.service.AuthenticationService;
 import com.project.banking.service.UserService;
@@ -45,7 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 		try {
 			authenticationManager.authenticate(authenticationToken);
 		} catch (AuthenticationException e) {
-			return Map.of("message", "Incorrect credentials");
+			throw new AuthenticationErrorException("Incorrect credentials");
 		}
 		String token = jwtUtil.generateToken(authenticationToken.getName());
 		return Map.of("jwt-token", token);
