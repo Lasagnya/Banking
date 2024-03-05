@@ -1,59 +1,48 @@
 package com.project.banking.util;
 
-import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.BankDAO;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.TransactionIncoming;
+import com.project.banking.domain.Account;
+import com.project.banking.exception.*;
+import com.project.banking.to.client.TransactionIncoming;
+import com.project.banking.service.AccountService;
+import com.project.banking.service.BankService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionVerification {
-	private final BankDAO bankDAO;
-	private final AccountDAO accountDAO;
+	private final BankService bankService;
+	private final AccountService accountService;
 
 	@Autowired
-	public TransactionVerification(BankDAO bankDAO, AccountDAO accountDAO) {
-		this.bankDAO = bankDAO;
-		this.accountDAO = accountDAO;
+	public TransactionVerification(BankService bankService, AccountService accountService) {
+		this.bankService = bankService;
+		this.accountService = accountService;
 	}
 
-	/**
-	 * @return returns integer value, where each digit of the number means
-	 * 			the result of the verification from 0 to 10. The first digit
-	 * 			is receivingBank, the second is receivingAccount, the third
-	 * 			is sendingAccount, the forth is amount of transaction.
-	 * */
-	public int verify(TransactionIncoming transaction) {
-		int errors = isBankCorrect(transaction.getReceivingBank()) +
-				isReceivingAccountCorrect(transaction.getReceivingAccount()) +
-				isSendingAccountCorrect(transaction.getSendingAccount());
-		if (errors == 0)
-			errors += isAmountCorrect(accountDAO.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
-		return errors;
+	public void verify(TransactionIncoming transaction) throws TransactionVerificationException {
+		isBankCorrect(transaction.getReceivingBank());
+		isReceivingAccountCorrect(transaction.getReceivingAccount());
+		isSendingAccountCorrect(transaction.getSendingAccount());
+		isAmountCorrect(accountService.findById(transaction.getSendingAccount()).get(), transaction.getAmount());
 	}
 
-	private int isBankCorrect(int id) {
-		if (bankDAO.findById(id).isPresent())
-			return 0;
-		else return 1 * 1;
+	private void isBankCorrect(int id) throws IncorrectBankException {
+		if (bankService.findById(id).isEmpty())
+			throw new IncorrectBankException();
 	}
 
-	private int isReceivingAccountCorrect(int id) {
-		if (accountDAO.findById(id).isPresent())
-			return 0;
-		else return 1 * 10;
+	private void isReceivingAccountCorrect(int id) throws IncorrectReceivingAccountException {
+		if (accountService.findById(id).isEmpty())
+			throw new IncorrectReceivingAccountException();
 	}
 
-	private int isSendingAccountCorrect(int id) {
-		if (accountDAO.findById(id).isPresent())
-			return 0;
-		else return 1 * 100;
+	private void isSendingAccountCorrect(int id) throws IncorrectSendingAccountException {
+		if (accountService.findById(id).isEmpty())
+			throw new IncorrectSendingAccountException();
 	}
 
-	private int isAmountCorrect(Account account, double amount) {
-		if (account.getBalance() >= amount)
-			return 0;
-		else return 1 * 1000;
+	private void isAmountCorrect(Account account, double amount) throws IncorrectAmountException {
+		if (account.getBalance() < amount)
+			throw new IncorrectAmountException();
 	}
 }

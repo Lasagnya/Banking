@@ -1,11 +1,13 @@
 package com.project.banking.util;
 
-import com.project.banking.dao.AccountDAO;
-import com.project.banking.dao.BankDAO;
-import com.project.banking.dao.UserDAO;
-import com.project.banking.model.database.Account;
-import com.project.banking.model.database.Bank;
+import com.project.banking.domain.Account;
+import com.project.banking.domain.Bank;
 import com.project.banking.enumeration.Period;
+import com.project.banking.service.AccountService;
+import com.project.banking.service.BankService;
+import com.project.banking.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,17 +21,26 @@ import java.util.Scanner;
  * Класс с функциями для ввода значений из интерфейса
  */
 
+@Component
 public class SwitchInputMethods {
-	private static final AccountDAO accountDAO = new AccountDAO();
-	private static final BankDAO bankDAO = new BankDAO();
+	private final AccountService accountService;
+	private final BankService bankService;
+	private final UserService userService;
 	private final Scanner scanner = new Scanner(System.in);
+
+	@Autowired
+	public SwitchInputMethods(AccountService accountService, BankService bankService, UserService userService) {
+		this.accountService = accountService;
+		this.bankService = bankService;
+		this.userService = userService;
+	}
 
 	/**
 	 * Получение банка-получателя
 	 * @return введённый id банка
 	 */
 	public int getReceivingBank() {
-		List<Bank> banks = bankDAO.findAll();
+		List<Bank> banks = bankService.findAll();
 		for (Bank bank : banks)
 			System.out.println(bank.getId() + ": " + bank.getName());
 		return scanner.nextInt();
@@ -42,7 +53,7 @@ public class SwitchInputMethods {
 	 */
 	public int getReceivingAccount(int receivingBank) {
 		int receivingAccount = scanner.nextInt();
-		while (!accountDAO.thisBank(receivingBank, receivingAccount)) {
+		while (!accountService.thisBank(receivingBank, receivingAccount)) {
 			System.out.println("Счёт не найден, попробуйте ещё раз.");
 			receivingAccount = scanner.nextInt();
 		}
@@ -55,7 +66,7 @@ public class SwitchInputMethods {
 	 */
 	public Account getSendingAccount() {
 		StreamTokenizer st = new StreamTokenizer(new BufferedReader(new InputStreamReader(System.in)));
-		List<Account> accounts = accountDAO.findByUser(UserDAO.getUser().getId());
+		List<Account> accounts = accountService.findByUser(userService.getUser().getId());
 		for (Account account : accounts)
 			System.out.println("Номер счёта: " + account.getId() +
 					", " + account.getBalance() + " " + account.getCurrency().toString());

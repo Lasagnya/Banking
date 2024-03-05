@@ -1,36 +1,39 @@
 package com.project.banking.util;
 
-import com.project.banking.model.Transaction;
 import com.project.banking.enumeration.TransactionStatus;
-import com.project.banking.service.TransactionsService;
+import com.project.banking.domain.Transaction;
+import com.project.banking.service.TransactionService;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-@Service
-public class ExpiryFunctionality extends Thread {
-	private final TransactionsService transactionsService;
+@Component
+@Scope("prototype")
+public class ExpiryFunctionality {
+	private final TransactionService transactionService;
 	@Setter
 	private Transaction transaction;
 
 	@Autowired
-	public ExpiryFunctionality(TransactionsService transactionsService) {
-		this.transactionsService = transactionsService;
+	public ExpiryFunctionality(TransactionService transactionService) {
+		this.transactionService = transactionService;
 	}
 
-	@Override
+	@Async
 	public void run() {
 		try {
 			TimeUnit.MINUTES.sleep(2);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		transaction = transactionsService.findById(transaction.getId()).get();
-		if (transaction.getStatus() != TransactionStatus.PAID) {
-			transactionsService.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
-			transactionsService.sendExpiredTransaction(transaction);
+		transaction = transactionService.findById(transaction.getId()).get();
+		if (transaction.getStatus() == TransactionStatus.PENDING || transaction.getStatus() == TransactionStatus.NEW) {
+			transaction = transactionService.updateTransactionStatus(transaction, TransactionStatus.EXPIRED);
+			transactionService.sendExpiredTransaction(transaction);
 		}
 	}
 }
